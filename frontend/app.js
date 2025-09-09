@@ -80,6 +80,14 @@ function displayMatches(matches) {
                 </div>
                 <div class="match-category">${match.category}</div>
                 <div class="match-description">${match.description}</div>
+                ${match.reasons && match.reasons.length > 0 ? `
+                    <div class="match-reasons">
+                        <h4>סיבות להתאמה:</h4>
+                        <ul class="reasons">
+                            ${match.reasons.map(reason => `<li>${formatHebrewArrows(reason)}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
             </div>
         `).join('');
     }
@@ -128,6 +136,13 @@ function getPriorityText(priority) {
         'Low': 'נמוכה'
     };
     return priorityMap[priority] || priority;
+}
+
+function formatHebrewArrows(text) {
+    // Helper to pretty-print Hebrew arrows (≥ ≤)
+    return text
+        .replace(/≥/g, '<span class="arrow">≥</span>')
+        .replace(/≤/g, '<span class="arrow">≤</span>');
 }
 
 // Health check on page load

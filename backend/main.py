@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,10 @@ from services.report import generate_report
 
 # Load environment variables
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Licensure Buddy IL", version="1.0.0")
 
@@ -35,7 +40,7 @@ def load_requirements():
         try:
             with open(parsed_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                print(f"Loaded {len(data)} requirements from {parsed_path.name}")
+                logger.info(f"Loaded {len(data)} requirements from {parsed_path.name}")
                 return data
         except (FileNotFoundError, json.JSONDecodeError):
             pass
@@ -44,10 +49,10 @@ def load_requirements():
     try:
         with open(sample_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            print(f"Loaded {len(data)} requirements from {sample_path.name}")
+            logger.info(f"Loaded {len(data)} requirements from {sample_path.name}")
             return data
     except FileNotFoundError:
-        print("No requirements data found")
+        logger.warning("No requirements data found")
         return []
 
 @app.get("/api/health")
@@ -67,8 +72,14 @@ async def match_business_requirements(business: BusinessInput):
     try:
         requirements = load_requirements()
         matched = match_requirements(business, requirements)
+        
+        # Log the count and which data file was used
+        data_file = "requirements.json" if (Path(__file__).parent / "data" / "requirements.json").exists() else "requirements.sample.json"
+        logger.info(f"Matched {len(matched)} requirements for business (size={business.size}, seats={business.seats}, area={business.area_sqm}, staff={business.staff_count}, features={len(business.features)}) using {data_file}")
+        
         return MatchResponse(business=business, matched=matched)
     except Exception as e:
+        logger.error(f"Error matching business requirements: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/report", response_model=ReportResponse)

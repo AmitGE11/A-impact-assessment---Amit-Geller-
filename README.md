@@ -78,6 +78,62 @@ The matching system supports multiple condition types:
 
 This comprehensive approach ensures accurate requirement matching based on your complete business profile.
 
+## Matching Engine
+
+The matching engine provides intelligent rule-based matching with detailed explanations for each requirement match.
+
+### Inputs Considered
+
+The matching engine evaluates business profiles based on:
+
+- **Business Size**: `small`, `medium`, or `large`
+- **Seating Capacity**: Number of seats (integer)
+- **Area**: Business area in square meters (integer)
+- **Staff Count**: Number of staff per shift (integer)
+- **Features**: List of business features (array of strings)
+
+### Supported Conditions
+
+The engine supports comprehensive condition matching:
+
+#### Size Conditions
+- **`size_any`**: Business size must be in the specified list
+  - Example: `{"size_any": ["medium", "large"]}`
+
+#### Numeric Conditions
+- **`min_seats`**: Minimum seating requirement
+- **`max_seats`**: Maximum seating limit
+- **`min_area_sqm`**: Minimum area requirement (square meters)
+- **`max_area_sqm`**: Maximum area limit (square meters)
+- **`min_staff`**: Minimum staff requirement
+- **`max_staff`**: Maximum staff limit
+
+#### Feature Conditions
+- **`features_any`**: Business must have at least one of the specified features
+- **`features_all`**: Business must have all of the specified features
+- **`features_none`**: Business must not have any of the specified features
+
+#### General Rules
+- Rules with no conditions match all businesses (general requirements)
+
+### Output with Explanations
+
+Each matched requirement includes detailed explanations (`reasons`) that explain why the rule matched:
+
+- **Size matches**: "סוג העסק 'medium' נכלל ב-size_any"
+- **Numeric matches**: "50≥30 ⇒ min_seats", "שטח 100≥50 ⇒ min_area_sqm"
+- **Feature matches**: "מאפיין כלשהו מזוהה: ['alcohol']", "כל המאפיינים הדרושים קיימים: ['gas', 'meat']"
+- **General rules**: "כללי — ללא תנאים"
+
+### Sorting
+
+Results are automatically sorted by:
+1. **Priority**: High → Medium → Low
+2. **Category**: Alphabetical order
+3. **Title**: Alphabetical order
+
+This ensures the most critical requirements appear first, making it easier for business owners to prioritize their compliance efforts.
+
 ## Pushing Code
 
 This repository uses the `main` branch as the default. Use the provided helper scripts to safely sync your changes:

@@ -12,9 +12,9 @@ ALLOWED_FEATURES = {
 class BusinessInput(BaseModel):
     """Business profile input for matching requirements"""
     size: Literal["small", "medium", "large"]
-    seats: int = Field(ge=0, description="Number of seats")
-    area_sqm: Optional[int] = Field(default=0, ge=0, description="Business area in square meters")
-    staff_count: Optional[int] = Field(default=0, ge=0, description="Number of staff per shift")
+    seats: int = Field(default=0, ge=0, description="Number of seats")
+    area_sqm: int = Field(default=0, ge=0, description="Business area in square meters")
+    staff_count: int = Field(default=0, ge=0, description="Number of staff per shift")
     features: List[str] = Field(default_factory=list, description="Business features")
     
     @validator('features')
@@ -24,6 +24,15 @@ class BusinessInput(BaseModel):
         if invalid_features:
             raise ValueError(f"תכונות לא מורשות: {', '.join(invalid_features)}. תכונות מורשות: {', '.join(sorted(ALLOWED_FEATURES))}")
         return v
+
+class MatchItem(BaseModel):
+    """Individual matched requirement item with explanations"""
+    id: str
+    category: str
+    title: str
+    description: str
+    priority: Literal["High", "Medium", "Low"] = "Medium"
+    reasons: List[str] = Field(default_factory=list, description="Explanation of why this rule matched")
 
 class RequirementItem(BaseModel):
     """Individual requirement item"""
@@ -37,7 +46,7 @@ class RequirementItem(BaseModel):
 class MatchResponse(BaseModel):
     """Response for business-requirements matching"""
     business: BusinessInput
-    matched: List[RequirementItem]
+    matched: List[MatchItem]
 
 class ReportRequest(BaseModel):
     """Request for generating compliance report"""

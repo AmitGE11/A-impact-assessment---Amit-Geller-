@@ -1,120 +1,136 @@
-from typing import List, Dict, Any
-from models import BusinessInput, RequirementItem
+from typing import List, Dict, Any, Generator
+from models import BusinessInput, MatchItem
 
-def match_requirements(business: BusinessInput, rules: List[Dict[str, Any]]) -> List[RequirementItem]:
+def match_requirements(business: BusinessInput, rules: List[Dict[str, Any]]) -> List[MatchItem]:
     """
-    Match business profile against requirements based on conditions.
+    Match business profile against requirements based on conditions with explanations.
     
     Args:
-        business: Business profile with size, seats, and features
+        business: Business profile with size, seats, area, staff, and features
         rules: List of requirement dictionaries from JSON data
         
     Returns:
-        List of matching RequirementItem objects, sorted by priority, category, then id
-        
-    Note:
-        Available business features for matching rules:
-        - Basic: gas, meat, delivery
-        - Service: alcohol, outdoor, music, smoking, night, takeaway
-        - Kitchen: kitchen_hot, kitchen_cold, dairy, fish, vegan
-        - Safety: grease_trap, hood_vent, fire_ext, sprinkler, handwash, gas_cert
-        - Operations: refrigeration, freezer, allergen_note, accessibility, signage, pest_control, waste_sep
-        
-        Supported condition keys:
-        - size_any: business size must be in list
-        - min_seats/max_seats: seat count thresholds
-        - min_area_sqm/max_area_sqm: area thresholds (square meters)
-        - min_staff/max_staff: staff count thresholds
-        - features_any: any of these features must be present
-        - features_all: all of these features must be present
-        - features_none: none of these features should be present
+        List of matching MatchItem objects with explanations, sorted by priority, category, then title
     """
-    matched = []
+    matched = list(_match_requirements_generator(business, rules))
     
-    for rule in rules:
-        if _matches_conditions(business, rule.get("conditions", {})):
-            # Convert dict to RequirementItem
-            requirement = RequirementItem(
-                id=rule["id"],
-                title=rule["title"],
-                category=rule["category"],
-                priority=rule["priority"],
-                description=rule["description"],
-                conditions=rule.get("conditions", {})
-            )
-            matched.append(requirement)
-    
-    # Sort by priority (High > Medium > Low), then category, then id
+    # Sort by priority weight {"High":0, "Medium":1, "Low":2}, then category, then title
     priority_order = {"High": 0, "Medium": 1, "Low": 2}
-    matched.sort(key=lambda x: (priority_order[x.priority], x.category, x.id))
+    matched.sort(key=lambda x: (priority_order[x.priority], x.category, x.title))
     
     return matched
 
-def _matches_conditions(business: BusinessInput, conditions: Dict[str, Any]) -> bool:
+def _match_requirements_generator(business: BusinessInput, rules: List[Dict[str, Any]]) -> Generator[MatchItem, None, None]:
     """
-    Check if business matches all provided conditions.
-    All conditions must be satisfied (AND logic).
+    Generator that yields matching rules with explanations.
     """
-    # size_any: business.size must be in the list
-    if "size_any" in conditions:
-        if business.size not in conditions["size_any"]:
-            return False
-    
-    # min_seats: business.seats must be >= min_seats
-    if "min_seats" in conditions:
-        if business.seats < conditions["min_seats"]:
-            return False
-    
-    # max_seats: business.seats must be <= max_seats
-    if "max_seats" in conditions:
-        if business.seats > conditions["max_seats"]:
-            return False
-    
-    # min_area_sqm: business.area_sqm must be >= min_area_sqm
-    if "min_area_sqm" in conditions:
-        if business.area_sqm < conditions["min_area_sqm"]:
-            return False
-    
-    # max_area_sqm: business.area_sqm must be <= max_area_sqm
-    if "max_area_sqm" in conditions:
-        if business.area_sqm > conditions["max_area_sqm"]:
-            return False
-    
-    # min_staff: business.staff_count must be >= min_staff
-    if "min_staff" in conditions:
-        if business.staff_count < conditions["min_staff"]:
-            return False
-    
-    # max_staff: business.staff_count must be <= max_staff
-    if "max_staff" in conditions:
-        if business.staff_count > conditions["max_staff"]:
-            return False
-    
-    # features_any: intersection between business.features and conditions must not be empty
-    if "features_any" in conditions:
-        if not set(business.features) & set(conditions["features_any"]):
-            return False
-    
-    # features_all: all features in conditions must be present in business.features
-    if "features_all" in conditions:
-        if not set(conditions["features_all"]).issubset(set(business.features)):
-            return False
-    
-    # features_none: none of the features in conditions should be present in business.features
-    if "features_none" in conditions:
-        if set(business.features) & set(conditions["features_none"]):
-            return False
-    
-    return True
+    for r in rules:
+        cond = r.get("conditions", {})  # may be missing keys
+        checks = []
+        reasons = []
+
+        # size_any
+        if cond.get("size_any"):
+            ok = business.size in cond["size_any"]
+            checks.append(ok)
+            if ok: 
+                reasons.append(f"סוג העסק '{business.size}' נכלל ב-size_any")
+
+        # seats
+        for k, sign, val in [("min_seats", ">=", cond.get("min_seats")),
+                             ("max_seats", "<=", cond.get("max_seats"))]:
+            if val is not None:
+                ok = (business.seats >= val) if "min" in k else (business.seats <= val)
+                checks.append(ok)
+                if ok: 
+                    reasons.append(f"{business.seats}{'≥' if 'min' in k else '≤'}{val} ⇒ {k}")
+
+        # area
+        for k, val in [("min_area_sqm", cond.get("min_area_sqm")),
+                       ("max_area_sqm", cond.get("max_area_sqm"))]:
+            if val is not None:
+                ok = (business.area_sqm >= val) if "min" in k else (business.area_sqm <= val)
+                checks.append(ok)
+                if ok: 
+                    reasons.append(f"שטח {business.area_sqm}{'≥' if 'min' in k else '≤'}{val} ⇒ {k}")
+
+        # staff
+        for k, val in [("min_staff", cond.get("min_staff")),
+                       ("max_staff", cond.get("max_staff"))]:
+            if val is not None:
+                ok = (business.staff_count >= val) if "min" in k else (business.staff_count <= val)
+                checks.append(ok)
+                if ok: 
+                    reasons.append(f"צוות {business.staff_count}{'≥' if 'min' in k else '≤'}{val} ⇒ {k}")
+
+        # features_any / all / none
+        fa = set(cond.get("features_any", []))
+        fall = set(cond.get("features_all", []))
+        fnone = set(cond.get("features_none", []))
+        bset = set(business.features or [])
+        
+        if fa:
+            ok = bool(bset & fa)
+            checks.append(ok)
+            if ok: 
+                reasons.append(f"מאפיין כלשהו מזוהה: {sorted(list(bset & fa))}")
+        
+        if fall:
+            ok = fall.issubset(bset)
+            checks.append(ok)
+            if ok: 
+                reasons.append(f"כל המאפיינים הדרושים קיימים: {sorted(list(fall))}")
+        
+        if fnone:
+            ok = not (bset & fnone)
+            checks.append(ok)
+            if ok: 
+                reasons.append(f"נבדק שאין מאפיינים אסורים: {sorted(list(fnone))}")
+
+        # if no conditions at all → treat as general rule (match everything)
+        if not any([cond.get("size_any"), cond.get("min_seats") is not None, cond.get("max_seats") is not None,
+                    cond.get("min_area_sqm") is not None, cond.get("max_area_sqm") is not None,
+                    cond.get("min_staff") is not None, cond.get("max_staff") is not None,
+                    fa, fall, fnone]):
+            checks.append(True)
+            reasons.append("כללי — ללא תנאים")
+
+        if all(checks):
+            yield MatchItem(
+                id=r.get("id", ""),
+                category=r.get("category", ""),
+                title=r.get("title", "").strip() or "(ללא כותרת)",
+                description=r.get("description", "").strip(),
+                priority=r.get("priority", "Medium"),
+                reasons=reasons
+            )
 
 if __name__ == "__main__":
     # Simple test cases
     from models import BusinessInput
     
     # Test business profiles
-    small_restaurant = BusinessInput(size="small", seats=20, features=["meat", "gas"])
-    large_cafe = BusinessInput(size="large", seats=100, features=["delivery"])
-    medium_bakery = BusinessInput(size="medium", seats=50, features=["gas"])
+    small_restaurant = BusinessInput(
+        size="small", 
+        seats=20, 
+        area_sqm=50, 
+        staff_count=3, 
+        features=["meat", "gas"]
+    )
+    large_cafe = BusinessInput(
+        size="large", 
+        seats=100, 
+        area_sqm=200, 
+        staff_count=8, 
+        features=["delivery"]
+    )
+    medium_bakery = BusinessInput(
+        size="medium", 
+        seats=50, 
+        area_sqm=100, 
+        staff_count=5, 
+        features=["gas"]
+    )
     
     # Test requirements
     test_rules = [
@@ -141,6 +157,14 @@ if __name__ == "__main__":
             "priority": "Medium",
             "description": "דרישות מיוחדות למקומות עם מעל 80 מקומות ישיבה",
             "conditions": {"min_seats": 80}
+        },
+        {
+            "id": "general_rule",
+            "title": "כללי",
+            "category": "כללי",
+            "priority": "Low",
+            "description": "כלל כללי ללא תנאים",
+            "conditions": {}
         }
     ]
     
@@ -149,13 +173,19 @@ if __name__ == "__main__":
     matches = match_requirements(small_restaurant, test_rules)
     for match in matches:
         print(f"  - {match.title} ({match.priority})")
+        for reason in match.reasons:
+            print(f"    * {reason}")
     
     print("\nTesting large cafe (delivery, 100 seats):")
     matches = match_requirements(large_cafe, test_rules)
     for match in matches:
         print(f"  - {match.title} ({match.priority})")
+        for reason in match.reasons:
+            print(f"    * {reason}")
     
     print("\nTesting medium bakery (gas only, 50 seats):")
     matches = match_requirements(medium_bakery, test_rules)
     for match in matches:
         print(f"  - {match.title} ({match.priority})")
+        for reason in match.reasons:
+            print(f"    * {reason}")

@@ -4,13 +4,17 @@ from pydantic import BaseModel, Field, validator
 # Allowed business features
 ALLOWED_FEATURES = {
     "gas", "meat", "delivery", "alcohol", "outdoor", "music", "smoking",
-    "kitchen_hot", "kitchen_cold", "dairy", "fish", "vegan", "night", "takeaway"
+    "kitchen_hot", "kitchen_cold", "dairy", "fish", "vegan", "night", "takeaway",
+    "grease_trap", "hood_vent", "fire_ext", "sprinkler", "handwash", "refrigeration",
+    "freezer", "allergen_note", "accessibility", "signage", "pest_control", "waste_sep", "gas_cert"
 }
 
 class BusinessInput(BaseModel):
     """Business profile input for matching requirements"""
     size: Literal["small", "medium", "large"]
     seats: int = Field(ge=0, description="Number of seats")
+    area_sqm: Optional[int] = Field(default=0, ge=0, description="Business area in square meters")
+    staff_count: Optional[int] = Field(default=0, ge=0, description="Number of staff per shift")
     features: List[str] = Field(default_factory=list, description="Business features")
     
     @validator('features')

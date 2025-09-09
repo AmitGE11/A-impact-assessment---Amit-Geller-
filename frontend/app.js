@@ -19,6 +19,8 @@ form.addEventListener('submit', async (e) => {
         const business = {
             size: formData.get('size'),
             seats: parseInt(formData.get('seats')) || 0, // Defensive: treat empty as 0
+            area_sqm: parseInt(formData.get('area_sqm')) || 0,
+            staff_count: parseInt(formData.get('staff_count')) || 0,
             features: formData.getAll('features')
         };
 

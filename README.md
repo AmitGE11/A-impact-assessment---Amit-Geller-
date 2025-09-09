@@ -59,11 +59,24 @@ Open `frontend/index.html` in your web browser.
 
 The digital questionnaire supports comprehensive business feature selection:
 
+### Numeric Fields
+- **שטח העסק (מ״ר)**: Business area in square meters
+- **מספר עובדים במשמרת**: Number of staff per shift
+
+### Feature Categories
 - **Basic Features**: גז, בשר, משלוחים
 - **Service Features**: הגשת אלכוהול, ישיבה חיצונית, מוסיקה/בידור, אזור עישון, פתוח אחרי חצות, איסוף עצמי
 - **Kitchen Features**: מטבח חם, מטבח קר בלבד, מזון חלבי, מזון דגים, טבעוני
+- **Safety Features**: מלכודת שומן, מנדף/יניקה, מטפי כיבוי ניידים, מערכת מתזים/ספרינקלרים, עמדות שטיפת ידיים, בדיקת גז בתוקף
+- **Operations Features**: קירור מסחרי, מקפיא/הקפאה, הצהרת אלרגנים בתפריט, נגישות לנכים, רישיון ושילוט במקום בולט, הדברה תקופתית, הפרדת פסולת/שמן בישול
 
-The matching system uses `features_any`, `features_all`, and `features_none` conditions to determine relevant licensing requirements based on your business profile.
+### Matching Logic
+The matching system supports multiple condition types:
+- **Thresholds**: min/max seats, min/max area (sqm), min/max staff count
+- **Feature Logic**: `features_any`, `features_all`, `features_none` conditions
+- **Size Logic**: `size_any` for business size matching
+
+This comprehensive approach ensures accurate requirement matching based on your complete business profile.
 
 ## Pushing Code
 

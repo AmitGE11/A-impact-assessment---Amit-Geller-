@@ -159,5 +159,67 @@
     "conditions": {
       "features_any": ["night"]
     }
+  },
+  {
+    "id": "req-x001",
+    "category": "היגיינה",
+    "title": "חובת התקנת מלכודת שומן",
+    "description": "עסק עם מטבח חם חייב להתקין מלכודת שומן ולפנותה באופן תקופתי.",
+    "priority": "High",
+    "conditions": {
+      "features_all": ["kitchen_hot"],
+      "features_any": ["grease_trap"]
+    }
+  },
+  {
+    "id": "req-x002",
+    "category": "בטיחות",
+    "title": "מנדף ויניקה תקינים מעל עמדות בישול",
+    "description": "במטבח חם נדרש מנדף/יניקה תקינים והחלפת פילטרים.",
+    "priority": "High",
+    "conditions": {
+      "features_all": ["kitchen_hot", "hood_vent"]
+    }
+  },
+  {
+    "id": "req-x003",
+    "category": "רישוי כללי",
+    "title": "נגישות לנכים בשטחי העסק",
+    "description": "לעסקים בינוניים/גדולים חלה חובת נגישות לפי התקן.",
+    "priority": "Medium",
+    "conditions": {
+      "size_any": ["medium", "large"],
+      "features_any": ["accessibility"]
+    }
+  },
+  {
+    "id": "req-x004",
+    "category": "היגיינה",
+    "title": "תוספת מתקני שירותים לצוות",
+    "description": "כאשר יש 6 עובדים במשמרת ומעלה, נדרשים מתקנים נוספים.",
+    "priority": "Medium",
+    "conditions": {
+      "min_staff": 6
+    }
+  },
+  {
+    "id": "req-x005",
+    "category": "רישוי כללי",
+    "title": "שילוט ורישיון עסק במקום גלוי",
+    "description": "יש להציג רישיון עסק ושילוט נלווה באזור הכניסה.",
+    "priority": "Low",
+    "conditions": {
+      "features_any": ["signage"]
+    }
+  },
+  {
+    "id": "req-x006",
+    "category": "היגיינה",
+    "title": "הפרדת פסולת ושמן בישול",
+    "description": "פעילות משלוחים מחייבת הפרדת פסולת ואיסוף שמנים למיחזור.",
+    "priority": "Medium",
+    "conditions": {
+      "features_any": ["delivery", "waste_sep"]
+    }
   }
 ]

@@ -17,8 +17,17 @@ def match_requirements(business: BusinessInput, rules: List[Dict[str, Any]]) -> 
         - Basic: gas, meat, delivery
         - Service: alcohol, outdoor, music, smoking, night, takeaway
         - Kitchen: kitchen_hot, kitchen_cold, dairy, fish, vegan
+        - Safety: grease_trap, hood_vent, fire_ext, sprinkler, handwash, gas_cert
+        - Operations: refrigeration, freezer, allergen_note, accessibility, signage, pest_control, waste_sep
         
-        Use features_any, features_all, or features_none in conditions to match these features.
+        Supported condition keys:
+        - size_any: business size must be in list
+        - min_seats/max_seats: seat count thresholds
+        - min_area_sqm/max_area_sqm: area thresholds (square meters)
+        - min_staff/max_staff: staff count thresholds
+        - features_any: any of these features must be present
+        - features_all: all of these features must be present
+        - features_none: none of these features should be present
     """
     matched = []
     
@@ -59,6 +68,26 @@ def _matches_conditions(business: BusinessInput, conditions: Dict[str, Any]) -> 
     # max_seats: business.seats must be <= max_seats
     if "max_seats" in conditions:
         if business.seats > conditions["max_seats"]:
+            return False
+    
+    # min_area_sqm: business.area_sqm must be >= min_area_sqm
+    if "min_area_sqm" in conditions:
+        if business.area_sqm < conditions["min_area_sqm"]:
+            return False
+    
+    # max_area_sqm: business.area_sqm must be <= max_area_sqm
+    if "max_area_sqm" in conditions:
+        if business.area_sqm > conditions["max_area_sqm"]:
+            return False
+    
+    # min_staff: business.staff_count must be >= min_staff
+    if "min_staff" in conditions:
+        if business.staff_count < conditions["min_staff"]:
+            return False
+    
+    # max_staff: business.staff_count must be <= max_staff
+    if "max_staff" in conditions:
+        if business.staff_count > conditions["max_staff"]:
             return False
     
     # features_any: intersection between business.features and conditions must not be empty

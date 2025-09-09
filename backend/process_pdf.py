@@ -3,6 +3,56 @@ import sys, json, re
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
+# Hebrew normalization utilities
+import re
+from bidi.algorithm import get_display
+
+HEB = re.compile(r'[\u0590-\u05FF]')
+DOT_RULE = re.compile(r'[.\-_]{6,}')
+SPACE_RULE = re.compile(r'[ \t]+')
+PAREN_SWAP = str.maketrans({'(':')', ')':'('})
+
+def looks_hebrew(s: str) -> bool:
+    return bool(HEB.search(s))
+
+def rtl_fix_line(s: str) -> str:
+    """
+    Fix a single line:
+    - strip dotted rules and extra whitespace
+    - if it contains Hebrew, run BiDi get_display
+    - avoid double-application by only doing it on raw extracted lines
+    - normalize mismatched parentheses after BiDi by swapping ( )
+    """
+    s = DOT_RULE.sub(' ', s)
+    s = SPACE_RULE.sub(' ', s).strip()
+    if not s:
+        return s
+    if looks_hebrew(s):
+        s = get_display(s)  # Remove base_dir parameter
+        # after BiDi, parentheses are visually flipped; normalize
+        s = s.translate(PAREN_SWAP)
+    return s
+
+def rtl_fix_block(text: str) -> str:
+    """Apply rtl_fix_line on each line and rejoin; collapse multiple blank lines."""
+    lines = [rtl_fix_line(ln) for ln in text.splitlines()]
+    lines = [ln for ln in lines if ln]  # drop empties
+    out = "\n".join(lines)
+    out = re.sub(r'\n{3,}', '\n\n', out)
+    return out.strip()
+
+def make_title(block: str, max_words: int = 12) -> str:
+    cand = block.split('\n', 1)[0]              # first line
+    if len(cand) < 10:
+        cand = re.split(r'[.:\-–;]\s+', block, maxsplit=1)[0]
+    words = cand.split()
+    t = " ".join(words[:max_words]).strip()
+    # if still empty, use first Hebrew word sequence
+    if not t and looks_hebrew(block):
+        m = re.search(r'([\u0590-\u05FF][\u0590-\u05FF\s]{6,})', block)
+        if m: t = m.group(1).strip()
+    return t
+
 # Import PDF processing libraries
 try:
     from pdfminer.high_level import extract_text as pdfminer_extract
@@ -91,6 +141,8 @@ def load_text(path: Path) -> str:
         if DOCX_AVAILABLE:
             text = load_docx_text(path)
     
+    # Don't apply RTL fix here - do it later in the pipeline
+    
     return text
 
 def normalize_spaces(text: str) -> str:
@@ -99,15 +151,6 @@ def normalize_spaces(text: str) -> str:
     text = re.sub(r'\n{2,}', '\n\n', text)
     return text.strip()
 
-def fix_rtl_line(line: str) -> str:
-    """Fix RTL display for Hebrew text"""
-    if not BIDI_AVAILABLE or len(line) < 12:
-        return line
-    
-    # Check if line contains Hebrew characters
-    if re.search(r'[\u0590-\u05FF]', line):
-        return get_display(line)
-    return line
 
 def split_blocks(text: str) -> List[str]:
     """Split text into blocks using multiple strategies"""
@@ -120,7 +163,7 @@ def split_blocks(text: str) -> List[str]:
         if not line:
             if current_block:
                 block_text = " ".join(current_block).strip()
-                if 40 <= len(block_text) <= 2000:
+                if _is_valid_block(block_text):
                     blocks.append(block_text)
                 current_block = []
             continue
@@ -129,7 +172,7 @@ def split_blocks(text: str) -> List[str]:
         if re.match(r'^\s*(\d+(?:\.\d+){1,3})\s+', line):
             if current_block:
                 block_text = " ".join(current_block).strip()
-                if 40 <= len(block_text) <= 2000:
+                if _is_valid_block(block_text):
                     blocks.append(block_text)
             current_block = [line]
             continue
@@ -138,7 +181,7 @@ def split_blocks(text: str) -> List[str]:
         if re.match(r'^\s*[•\-–]\s+', line):
             if current_block:
                 block_text = " ".join(current_block).strip()
-                if 40 <= len(block_text) <= 2000:
+                if _is_valid_block(block_text):
                     blocks.append(block_text)
             current_block = [line]
             continue
@@ -148,10 +191,22 @@ def split_blocks(text: str) -> List[str]:
     # Add final block
     if current_block:
         block_text = " ".join(current_block).strip()
-        if 40 <= len(block_text) <= 2000:
+        if _is_valid_block(block_text):
             blocks.append(block_text)
     
     return blocks
+
+def _is_valid_block(block: str) -> bool:
+    """Check if block is valid (length and Hebrew content)"""
+    if len(block) < 40 or len(block) > 2200:
+        return False
+    
+    # Check Hebrew content percentage
+    hebrew_chars = len(re.findall(r'[\u0590-\u05FF]', block))
+    total_chars = len(block)
+    hebrew_ratio = hebrew_chars / total_chars if total_chars > 0 else 0
+    
+    return hebrew_ratio >= 0.1  # At least 10% Hebrew content
 
 def guess_category(text: str) -> str:
     """Guess category based on keywords"""
@@ -171,14 +226,6 @@ def guess_category(text: str) -> str:
     
     return max(score, key=score.get) if any(score.values()) else "רישוי כללי"
 
-def extract_title(text: str, max_words: int = 12) -> str:
-    """Extract title from first sentence"""
-    # Fix RTL for title extraction
-    fixed_text = fix_rtl_line(text)
-    sentences = re.split(r'[.!?]', fixed_text)
-    first_sentence = sentences[0].strip()
-    words = first_sentence.split()
-    return " ".join(words[:max_words])
 
 def infer_priority(text: str) -> str:
     """Infer priority based on strong words"""
@@ -251,7 +298,7 @@ def deduplicate_blocks(blocks: List[str]) -> List[str]:
     seen_titles = set()
     
     for block in blocks:
-        title = extract_title(block, 8)  # Use shorter title for comparison
+        title = make_title(block, 8)  # Use shorter title for comparison
         if title not in seen_titles:
             seen_titles.add(title)
             unique_blocks.append(block)
@@ -260,11 +307,15 @@ def deduplicate_blocks(blocks: List[str]) -> List[str]:
 
 def block_to_item(idx: int, block: str) -> Dict[str, Any]:
     """Convert text block to requirement item"""
-    # Fix RTL for the entire block
-    fixed_block = fix_rtl_line(block)
+    # Apply RTL fix to the entire block
+    fixed_block = rtl_fix_block(block)
+    
+    # Generate title with fallback
+    title = make_title(fixed_block)
+    if not title:
+        return None  # Skip blocks without valid titles
     
     category = guess_category(fixed_block)
-    title = extract_title(fixed_block)
     priority = infer_priority(fixed_block)
     conditions = extract_conditions(fixed_block)
     
@@ -277,18 +328,34 @@ def block_to_item(idx: int, block: str) -> Dict[str, Any]:
         "conditions": conditions
     }
 
-def parse_text_to_items(text: str) -> List[Dict[str, Any]]:
-    """Parse text into requirement items"""
+def parse_text_to_items(text: str) -> tuple[List[Dict[str, Any]], Dict[str, int]]:
+    """Parse text into requirement items with statistics"""
     normalized_text = normalize_spaces(text)
     blocks = split_blocks(normalized_text)
     blocks = deduplicate_blocks(blocks)
     
     items = []
+    dropped_short = 0
+    dropped_nonhe = 0
+    
     for i, block in enumerate(blocks, 1):
         item = block_to_item(i, block)
-        items.append(item)
+        if item is not None:
+            items.append(item)
+        else:
+            # Count why it was dropped
+            if len(block) < 40:
+                dropped_short += 1
+            elif len(re.findall(r'[\u0590-\u05FF]', block)) / len(block) < 0.2:
+                dropped_nonhe += 1
     
-    return items
+    stats = {
+        "items": len(items),
+        "dropped_short": dropped_short,
+        "dropped_nonhe": dropped_nonhe
+    }
+    
+    return items, stats
 
 def save_json(data: List[Dict[str, Any]], path: Path) -> None:
     """Save data to JSON file"""
@@ -319,10 +386,11 @@ def main(input_path: Optional[Path] = None):
     
     print(f"Extracted {len(text)} characters")
     
-    items = parse_text_to_items(text)
+    items, stats = parse_text_to_items(text)
     save_json(items, OUTPUT_JSON)
     
-    print(f"Extracted {len(items)} requirements → {OUTPUT_JSON}")
+    print(f"Extracted {stats['items']} requirements → {OUTPUT_JSON}")
+    print(f"Summary: {stats}")
 
 if __name__ == "__main__":
     arg_path = Path(sys.argv[1]) if len(sys.argv) > 1 else None

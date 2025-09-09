@@ -220,6 +220,8 @@ The improved parser now supports:
 - **Smart deduplication**: Removes near-identical blocks based on title similarity
 - **Priority inference**: High for "חובה/נדרש", Medium for "מומלץ", Low otherwise
 
+**Applied Hebrew BiDi normalization to all lines (python-bidi), normalized parentheses, removed dotted rulers, and ensured non-empty titles with a robust fallback.**
+
 ## License
 
 This project is part of the Israeli business licensing assessment initiative.

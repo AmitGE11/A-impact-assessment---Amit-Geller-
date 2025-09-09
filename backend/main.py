@@ -34,15 +34,20 @@ def load_requirements():
     if parsed_path.exists():
         try:
             with open(parsed_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                print(f"Loaded {len(data)} requirements from {parsed_path.name}")
+                return data
         except (FileNotFoundError, json.JSONDecodeError):
             pass
     
     # Fallback to sample data
     try:
         with open(sample_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            print(f"Loaded {len(data)} requirements from {sample_path.name}")
+            return data
     except FileNotFoundError:
+        print("No requirements data found")
         return []
 
 @app.get("/api/health")

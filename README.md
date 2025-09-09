@@ -206,6 +206,20 @@ ALLOWED_ORIGINS=*
 
 I implemented a reproducible data pipeline that converts the provided regulatory PDF into structured JSON using a relative-path workflow. The script `backend/process_pdf.py` (pdfplumber-based) reads `backend/data/18-07-2022_4.2A.pdf`, cleans the text, splits it into requirement blocks with a simple heuristic, and writes `backend/data/requirements.json`. Each item includes: `id`, `category`, `title`, `description`, `priority`, and `conditions` (size/seats/features). The backend now prefers `requirements.json` when present and falls back to `requirements.sample.json`, ensuring the app runs locally for any reviewer without hardcoded machine-specific paths.
 
+#### Better parsing for Hebrew PDFs
+
+The improved parser now supports:
+- **Multi-library extraction**: pdfminer.six → pdfplumber → python-docx fallback chain
+- **RTL text handling**: Uses python-bidi to fix Hebrew text display order
+- **Numbered clause splitting**: Detects numbered headings (e.g., "3.1.2", "4.5.6.7") and bullet points
+- **Automatic condition extraction**: Heuristically mines conditions from text using regex patterns:
+  - Seats: "עד X מקומות" → max_seats, "מעל X מקומות" → min_seats
+  - Area: "עד X מ״ר" → max_area_sqm, "מעל X מ״ר" → min_area_sqm
+  - Staff: "X עובדים" → min_staff (when "נדרשים" is present)
+  - Features: Keyword detection for gas, meat, dairy, alcohol, etc.
+- **Smart deduplication**: Removes near-identical blocks based on title similarity
+- **Priority inference**: High for "חובה/נדרש", Medium for "מומלץ", Low otherwise
+
 ## License
 
 This project is part of the Israeli business licensing assessment initiative.

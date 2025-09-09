@@ -65,6 +65,37 @@ The digital questionnaire supports comprehensive business feature selection:
 
 The matching system uses `features_any`, `features_all`, and `features_none` conditions to determine relevant licensing requirements based on your business profile.
 
+## Pushing Code
+
+This repository uses the `main` branch as the default. Use the provided helper scripts to safely sync your changes:
+
+### Windows (PowerShell)
+```powershell
+# Quick sync with default message
+./sync-main.ps1
+
+# Sync with custom commit message
+./sync-main.ps1 "feat: add new feature"
+```
+
+### macOS/Linux (bash)
+```bash
+# Quick sync with default message
+bash tools/git_sync_main.sh
+
+# Sync with custom commit message
+bash tools/git_sync_main.sh "feat: add new feature"
+```
+
+### What the scripts do:
+- Rename local `master` branch to `main` if needed
+- Set `main` as the default branch for future repositories
+- Pull latest changes from remote `main` branch
+- Stage and commit all local changes
+- Push to `origin/main` with upstream tracking
+
+**Note**: If a pull request is required, use the GitHub UI after pushing.
+
 ## API Endpoints
 
 ### Health Check

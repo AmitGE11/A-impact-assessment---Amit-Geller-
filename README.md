@@ -55,6 +55,16 @@ The backend will be available at `http://localhost:8000`
 
 Open `frontend/index.html` in your web browser.
 
+## Using the Questionnaire
+
+The digital questionnaire supports comprehensive business feature selection:
+
+- **Basic Features**: גז, בשר, משלוחים
+- **Service Features**: הגשת אלכוהול, ישיבה חיצונית, מוסיקה/בידור, אזור עישון, פתוח אחרי חצות, איסוף עצמי
+- **Kitchen Features**: מטבח חם, מטבח קר בלבד, מזון חלבי, מזון דגים, טבעוני
+
+The matching system uses `features_any`, `features_all`, and `features_none` conditions to determine relevant licensing requirements based on your business profile.
+
 ## API Endpoints
 
 ### Health Check

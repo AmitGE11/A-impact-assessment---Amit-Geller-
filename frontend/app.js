@@ -18,13 +18,19 @@ form.addEventListener('submit', async (e) => {
         const formData = new FormData(form);
         const business = {
             size: formData.get('size'),
-            seats: parseInt(formData.get('seats')),
+            seats: parseInt(formData.get('seats')) || 0, // Defensive: treat empty as 0
             features: formData.getAll('features')
         };
 
         // Show loading state
         submitBtn.disabled = true;
-        submitBtn.textContent = 'מחפש...';
+        submitBtn.textContent = 'טוען...';
+        
+        // Show loading in results areas
+        matchesContainer.innerHTML = '<div class="loading">טוען התאמות...</div>';
+        reportContent.textContent = 'טוען דוח...';
+        resultsSection.style.display = 'block';
+        reportSection.style.display = 'block';
 
         // Call match API
         const matchResponse = await fetch(`${API_BASE}/match`, {
@@ -50,10 +56,13 @@ form.addEventListener('submit', async (e) => {
     } catch (error) {
         console.error('Error:', error);
         alert('שגיאה בחיפוש דרישות רישוי. אנא נסה שוב.');
+        // Show error in containers
+        matchesContainer.innerHTML = '<div class="error">שגיאה בטעינת התאמות: ' + error.message + '</div>';
+        reportContent.textContent = 'שגיאה ביצירת הדוח: ' + error.message;
     } finally {
         // Reset button state
         submitBtn.disabled = false;
-        submitBtn.textContent = 'חפש דרישות רישוי';
+        submitBtn.textContent = 'קבל דוח';
     }
 });
 
@@ -104,7 +113,7 @@ async function generateReport(business, requirements) {
 
     } catch (error) {
         console.error('Error generating report:', error);
-        reportContent.textContent = 'שגיאה ביצירת הדוח. אנא נסה שוב.';
+        reportContent.textContent = 'שגיאה ביצירת הדוח: ' + error.message;
     } finally {
         reportLoading.style.display = 'none';
     }

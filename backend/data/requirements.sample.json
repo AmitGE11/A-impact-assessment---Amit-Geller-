@@ -99,5 +99,65 @@
     "conditions": {
       "features_none": ["alcohol"]
     }
+  },
+  {
+    "id": "req-s001",
+    "category": "רישוי כללי",
+    "title": "נדרש רישיון להגשת אלכוהול",
+    "description": "עסק המגיש אלכוהול מחויב ברישיון הגשה ובעמידה בתנאי בטיחות ושילוט.",
+    "priority": "High",
+    "conditions": {
+      "features_any": ["alcohol"]
+    }
+  },
+  {
+    "id": "req-s002",
+    "category": "רישוי כללי",
+    "title": "היתר רעש ואישור להצבת ישיבה חיצונית",
+    "description": "ישיבה חיצונית מחייבת תיאום עם הרשות המקומית ועמידה במגבלות רעש.",
+    "priority": "Medium",
+    "conditions": {
+      "features_any": ["outdoor"]
+    }
+  },
+  {
+    "id": "req-s003",
+    "category": "רישוי כללי",
+    "title": "היתר נגן חי/מערכת הגברה",
+    "description": "השמעת מוסיקה/בידור דורשת עמידה בכללי רעש ושעות פעילות.",
+    "priority": "Medium",
+    "conditions": {
+      "features_any": ["music"]
+    }
+  },
+  {
+    "id": "req-s004",
+    "category": "בטיחות",
+    "title": "הפרדה וסימון לאזור עישון",
+    "description": "אזורי עישון חייבים להיות מסומנים ומופרדים בהתאם להנחיות.",
+    "priority": "High",
+    "conditions": {
+      "features_any": ["smoking"]
+    }
+  },
+  {
+    "id": "req-s005",
+    "category": "בטיחות",
+    "title": "אוורור ויניקה למטבח חם",
+    "description": "מטבח חם מחייב מערכת יניקה/סינון תקינה והחלפת פילטרים תקופתית.",
+    "priority": "High",
+    "conditions": {
+      "features_any": ["kitchen_hot"]
+    }
+  },
+  {
+    "id": "req-s006",
+    "category": "רישוי כללי",
+    "title": "אישור פעילות לאחר חצות",
+    "description": "פתיחה לאחר חצות דורשת היתר שעות פעילות מיוחד ובקרת רעש.",
+    "priority": "Medium",
+    "conditions": {
+      "features_any": ["night"]
+    }
   }
 ]

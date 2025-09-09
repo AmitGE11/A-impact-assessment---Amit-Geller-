@@ -11,6 +11,14 @@ def match_requirements(business: BusinessInput, rules: List[Dict[str, Any]]) -> 
         
     Returns:
         List of matching RequirementItem objects, sorted by priority, category, then id
+        
+    Note:
+        Available business features for matching rules:
+        - Basic: gas, meat, delivery
+        - Service: alcohol, outdoor, music, smoking, night, takeaway
+        - Kitchen: kitchen_hot, kitchen_cold, dairy, fish, vegan
+        
+        Use features_any, features_all, or features_none in conditions to match these features.
     """
     matched = []
     

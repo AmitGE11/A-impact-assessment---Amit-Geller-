@@ -1,0 +1,103 @@
+[
+  {
+    "id": "gas_safety_1",
+    "title": "בטיחות מערכות גז",
+    "category": "בטיחות",
+    "priority": "High",
+    "description": "דרישות בטיחות למערכות גז במטבח, כולל בדיקות תקופתיות ומערכות כיבוי",
+    "conditions": {
+      "features_any": ["gas"]
+    }
+  },
+  {
+    "id": "meat_handling_1",
+    "title": "טיפול בבשר טרי",
+    "category": "היגיינה",
+    "priority": "High",
+    "description": "דרישות היגיינה לטיפול בבשר טרי, כולל קירור, הפרדה וניקיון",
+    "conditions": {
+      "features_any": ["meat"]
+    }
+  },
+  {
+    "id": "delivery_license_1",
+    "title": "רישיון משלוחים",
+    "category": "רישוי כללי",
+    "priority": "Medium",
+    "description": "רישיון מיוחד לפעילות משלוחים, כולל ביטוח ואמצעי קירור",
+    "conditions": {
+      "features_any": ["delivery"]
+    }
+  },
+  {
+    "id": "large_seating_1",
+    "title": "רישוי למקומות ישיבה רבים",
+    "category": "רישוי כללי",
+    "priority": "Medium",
+    "description": "דרישות מיוחדות למקומות עם מעל 80 מקומות ישיבה, כולל מערכות בטיחות מתקדמות",
+    "conditions": {
+      "min_seats": 80
+    }
+  },
+  {
+    "id": "small_business_1",
+    "title": "רישוי עסק קטן",
+    "category": "רישוי כללי",
+    "priority": "Low",
+    "description": "הליכי רישוי פשוטים לעסקים קטנים עם פחות מ-20 מקומות ישיבה",
+    "conditions": {
+      "size_any": ["small"],
+      "max_seats": 20
+    }
+  },
+  {
+    "id": "medium_business_1",
+    "title": "רישוי עסק בינוני",
+    "category": "רישוי כללי",
+    "priority": "Medium",
+    "description": "דרישות רישוי לעסקים בינוניים עם 21-80 מקומות ישיבה",
+    "conditions": {
+      "size_any": ["medium"],
+      "min_seats": 21,
+      "max_seats": 80
+    }
+  },
+  {
+    "id": "fire_safety_1",
+    "title": "בטיחות אש",
+    "category": "בטיחות",
+    "priority": "High",
+    "description": "מערכות כיבוי אש, גלאי עשן ויציאות חירום",
+    "conditions": {
+      "min_seats": 30
+    }
+  },
+  {
+    "id": "hygiene_basic_1",
+    "title": "היגיינה בסיסית",
+    "category": "היגיינה",
+    "priority": "Medium",
+    "description": "דרישות היגיינה בסיסיות לכל עסק מזון, כולל ניקיון ובדיקות תקופתיות",
+    "conditions": {}
+  },
+  {
+    "id": "accessibility_1",
+    "title": "נגישות",
+    "category": "רישוי כללי",
+    "priority": "Low",
+    "description": "דרישות נגישות לעסקים עם מעל 50 מקומות ישיבה",
+    "conditions": {
+      "min_seats": 50
+    }
+  },
+  {
+    "id": "no_alcohol_1",
+    "title": "איסור מכירת אלכוהול",
+    "category": "רישוי כללי",
+    "priority": "Medium",
+    "description": "הגבלות על מכירת אלכוהול לעסקים מסוימים",
+    "conditions": {
+      "features_none": ["alcohol"]
+    }
+  }
+]

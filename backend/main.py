@@ -25,11 +25,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load sample requirements data
+# Load requirements data
 def load_requirements():
-    data_path = Path(__file__).parent / "data" / "requirements.sample.json"
+    # Try to load parsed requirements first, fallback to sample data
+    parsed_path = Path(__file__).parent / "data" / "requirements.json"
+    sample_path = Path(__file__).parent / "data" / "requirements.sample.json"
+    
+    if parsed_path.exists():
+        try:
+            with open(parsed_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+    
+    # Fallback to sample data
     try:
-        with open(data_path, "r", encoding="utf-8") as f:
+        with open(sample_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         return []

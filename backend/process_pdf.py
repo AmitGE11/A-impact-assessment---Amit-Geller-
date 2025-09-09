@@ -4,7 +4,7 @@ from pathlib import Path
 import pdfplumber
 
 DATA_DIR = Path(__file__).parent / "data"
-DEFAULT_PDF = Path(__file__).parent.parent / "18-07-2022_4.2A.pdf"
+DEFAULT_PDF = DATA_DIR / "18-07-2022_4.2A.pdf"
 OUTPUT_JSON = DATA_DIR / "requirements.json"
 
 PRIORITY_ORDER = ["High", "Medium", "Low"]

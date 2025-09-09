@@ -39,6 +39,9 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Optional: generate structured data from the PDF
+python process_pdf.py      # uses backend/data/18-07-2022_4.2A.pdf
+
 # Copy environment file (optional: add your OpenAI API key)
 cp env.example .env
 
@@ -124,6 +127,8 @@ ALLOWED_ORIGINS=*
 │   │   └── __init__.py
 │   ├── data/
 │   │   ├── requirements.sample.json  # Sample licensing requirements
+│   │   ├── requirements.json         # Generated from PDF (via process_pdf.py)
+│   │   ├── 18-07-2022_4.2A.pdf      # Source PDF document
 │   │   └── README.md
 │   ├── requirements.txt
 │   ├── env.example
@@ -136,10 +141,16 @@ ALLOWED_ORIGINS=*
 
 ## Development Notes
 
-- **Step 1**: Currently uses sample data from `requirements.sample.json`
-- **Step 2**: Next phase will parse actual requirements from provided PDF/Word documents
+- **Step 1**: Data processing pipeline complete - PDF parsed to structured JSON
+- **Data Sources**: 
+  - `requirements.sample.json` - Demo data for initial testing
+  - `requirements.json` - Generated from PDF via `process_pdf.py`
 - **AI Integration**: Falls back to structured mock reports when OpenAI API key is not provided
 - **CORS**: Configured to allow all origins in development
+
+### Step 1 — Data Processing (PDF → JSON, relative paths)
+
+I implemented a reproducible data pipeline that converts the provided regulatory PDF into structured JSON using a relative-path workflow. The script `backend/process_pdf.py` (pdfplumber-based) reads `backend/data/18-07-2022_4.2A.pdf`, cleans the text, splits it into requirement blocks with a simple heuristic, and writes `backend/data/requirements.json`. Each item includes: `id`, `category`, `title`, `description`, `priority`, and `conditions` (size/seats/features). The backend now prefers `requirements.json` when present and falls back to `requirements.sample.json`, ensuring the app runs locally for any reviewer without hardcoded machine-specific paths.
 
 ## License
 

@@ -56,7 +56,7 @@ def generate_report(request: ReportRequest) -> dict:
     api_key = os.getenv("OPENAI_API_KEY")
     model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     
-    if not api_key or api_key == "sk-xxx" or api_key.startswith("sk-..."):
+    if not api_key or api_key == "sk-xxx" or api_key == "sk-...":
         return {
             "report": _generate_mock_report(request.business, request.requirements),
             "metadata": {

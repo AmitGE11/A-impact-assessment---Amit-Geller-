@@ -131,6 +131,47 @@ If no API key is provided or the API fails, the application automatically falls 
 
 **Important**: The `.env` file must be located in the `backend/` directory, not in the repository root. The application loads environment variables from `backend/.env` specifically.
 
+## Troubleshooting
+
+### Badge shows 'mock' while PROVIDER=gemini
+
+If the report badge shows "מודל בשימוש: mock" but you have `PROVIDER=gemini` in your `.env` file, check:
+
+1. **Environment Configuration**: Ensure `backend/.env` has:
+   ```
+   PROVIDER=gemini
+   GEMINI_API_KEY=your-actual-gemini-key-here
+   ```
+
+2. **Server Restart**: Restart the backend server after making changes to `.env`:
+   ```bash
+   cd backend
+   uvicorn main:app --reload --host 127.0.0.1 --port 8000
+   ```
+
+3. **Direct API Test**: Test Gemini API directly:
+   ```bash
+   # PowerShell
+   $headers = @{ "Content-Type" = "application/json" }
+   $body = @{ contents = @(@{ parts = @(@{ text = "Hello" }) }) } | ConvertTo-Json -Depth 10
+   Invoke-RestMethod -Uri "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=YOUR_KEY" -Method POST -Headers $headers -Body $body
+   
+   # Or with curl
+   curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=YOUR_KEY" -H "Content-Type: application/json" -d '{"contents":[{"parts":[{"text":"Hello"}]}]}'
+   ```
+
+4. **Backend Logs**: Check backend logs for diagnostic messages:
+   - Look for "AI provider configured: gemini" at startup
+   - Look for "Gemini HTTP <code>" lines during report generation
+   - Look for "Gemini selected but GEMINI_API_KEY missing" warnings
+
+### Common Issues
+
+- **Missing API Key**: If you see "missing_key" in the metadata, the `GEMINI_API_KEY` is not set
+- **HTTP Errors**: Check the HTTP status code in logs (400 = bad request, 401 = unauthorized, 403 = forbidden)
+- **Empty Response**: Gemini returns 200 but no content - check API quota and key validity
+- **Network Issues**: Check internet connectivity and firewall settings
+
 ## Using the Questionnaire
 
 The digital questionnaire supports comprehensive business feature selection:

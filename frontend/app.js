@@ -469,8 +469,16 @@ async function generateSmartReport() {
             const provider = reportData.metadata.provider || 'mock';
             const model = reportData.metadata.model || '';
             const modelText = model ? ` (${model})` : '';
-            modalModelBadge.textContent = `מודל: ${provider}${modelText}`;
+            modalModelBadge.textContent = `מודל בשימוש: ${provider}${modelText}`;
             modalModelBadge.style.display = 'inline-block';
+            
+            // Show Gemini warning if in mock mode due to Gemini issues
+            if (reportData.metadata.mode === 'mock' && reportData.metadata.provider === 'gemini') {
+                const warningDiv = document.createElement('div');
+                warningDiv.style.cssText = 'color: #ff6b6b; font-size: 12px; margin-top: 5px; font-style: italic;';
+                warningDiv.textContent = 'הוצג דוח הדמיה – בעיית חיבור ל-Gemini (בדקו מפתח/הגדרות).';
+                modalModelBadge.parentNode.insertBefore(warningDiv, modalModelBadge.nextSibling);
+            }
             
             // Update the button to reflect the actual model used
             updateSmartReportButton(provider);

@@ -18,6 +18,10 @@ load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Log provider configuration at startup
+provider = os.getenv("PROVIDER", "mock").lower()
+logger.info("AI Provider configured: %s", provider)
+
 app = FastAPI(title="Licensure Buddy IL", version="1.0.0")
 
 # CORS configuration

@@ -1,13 +1,31 @@
 import os
 import requests
+import json
+import logging
 from typing import List
 from models import BusinessInput, RequirementItem, ReportRequest
 
 # Provider configuration
 PROVIDER = os.getenv("PROVIDER", "mock").lower()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Logger
+log = logging.getLogger("report")
+
+def _gemini_extract_text(data: dict) -> str:
+    """Safely extract text from Gemini API response."""
+    try:
+        cands = data.get("candidates", [])
+        if not cands: 
+            return ""
+        parts = cands[0].get("content", {}).get("parts", [])
+        if not parts: 
+            return ""
+        return parts[0].get("text", "").strip()
+    except Exception:
+        return ""
 
 def build_prompt(business: BusinessInput, matched: List[RequirementItem]) -> str:
     """
@@ -56,33 +74,47 @@ def build_prompt(business: BusinessInput, matched: List[RequirementItem]) -> str
     return prompt
 
 def _gemini_report(business: BusinessInput, matches: List[RequirementItem]) -> dict:
-    """
-    Generate a compliance report using Google Gemini API.
-    """
+    """Generate a compliance report using Google Gemini API."""
+    if not GEMINI_API_KEY:
+        log.warning("Gemini selected but GEMINI_API_KEY missing; falling back to mock.")
+        return {
+            "report": _generate_mock_report(business, matches),
+            "metadata": {"mode": "mock", "provider": "gemini", "reason": "missing_key"}
+        }
+    
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
     prompt = build_prompt(business, matches)
-    body = {
-        "contents": [{"parts": [{"text": prompt}]}]
-    }
+    body = {"contents": [{"parts": [{"text": prompt}]}]}
     
     try:
-        resp = requests.post(url, json=body, timeout=60)
-        if resp.status_code != 200:
+        log.info("Calling Gemini generateContent (len(prompt)=%s)", len(prompt))
+        r = requests.post(url, json=body, timeout=60)
+        log.info("Gemini HTTP %s", r.status_code)
+        
+        if r.status_code != 200:
             return {
-                "report": _generate_mock_report(business, matches) + f"\n\n> Gemini error {resp.status_code}", 
-                "metadata": {"mode": "mock", "provider": "gemini"}
+                "report": _generate_mock_report(business, matches) + f"\n\n> Gemini error {r.status_code}",
+                "metadata": {"mode": "mock", "provider": "gemini", "http": r.status_code}
             }
         
-        data = resp.json()
-        text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        data = r.json()
+        text = _gemini_extract_text(data)
+        if not text:
+            log.warning("Gemini returned 200 but empty text; data keys=%s", list(data.keys()))
+            return {
+                "report": _generate_mock_report(business, matches) + "\n\n> Gemini returned empty content.",
+                "metadata": {"mode": "mock", "provider": "gemini", "http": 200}
+            }
+        
         return {
-            "report": text or _generate_mock_report(business, matches), 
+            "report": text, 
             "metadata": {"mode": "live", "provider": "gemini"}
         }
     except Exception as e:
+        log.exception("Gemini exception")
         return {
-            "report": _generate_mock_report(business, matches) + f"\n\n> Gemini error: {str(e)}", 
-            "metadata": {"mode": "mock", "provider": "gemini"}
+            "report": _generate_mock_report(business, matches) + f"\n\n> Gemini exception: {e}",
+            "metadata": {"mode": "mock", "provider": "gemini", "exception": True}
         }
 
 def _openai_report(business: BusinessInput, matches: List[RequirementItem]) -> dict:
@@ -135,17 +167,19 @@ def generate_report(request: ReportRequest) -> dict:
     Generate a compliance report using the configured provider (OpenAI, Gemini, or Mock).
     Returns dict with 'report' and 'metadata' keys.
     """
-    if PROVIDER == "openai" and OPENAI_API_KEY and OPENAI_API_KEY not in ["sk-xxx", "sk-..."]:
-        return _openai_report(request.business, request.requirements)
-    elif PROVIDER == "gemini" and GEMINI_API_KEY and GEMINI_API_KEY != "your-gemini-key-here":
+    log.info("AI provider configured: %s", PROVIDER)
+    
+    if PROVIDER == "gemini":
         return _gemini_report(request.business, request.requirements)
+    elif PROVIDER == "openai":
+        res = _openai_report(request.business, request.requirements)
+        if "metadata" in res: 
+            res["metadata"].setdefault("provider", "openai")
+        return res
     else:
         return {
             "report": _generate_mock_report(request.business, request.requirements),
-            "metadata": {
-                "mode": "mock",
-                "provider": "mock"
-            }
+            "metadata": {"mode": "mock", "provider": "mock"}
         }
 
 def _generate_mock_report(business: BusinessInput, requirements: List[RequirementItem]) -> str:

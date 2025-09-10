@@ -1,10 +1,11 @@
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(find_dotenv(filename=".env", raise_error_if_not_found=False), override=True)
+from pathlib import Path
+from dotenv import load_dotenv
+ENV_PATH = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=ENV_PATH, override=True)
 
 import os
 import logging
 from typing import List
-from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import json

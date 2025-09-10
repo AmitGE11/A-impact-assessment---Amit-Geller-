@@ -1,5 +1,6 @@
 from pathlib import Path
 from dotenv import load_dotenv
+
 ENV_PATH = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=ENV_PATH, override=True)
 
@@ -13,13 +14,13 @@ from models import BusinessInput, RequirementItem, ReportRequest
 log = logging.getLogger("report")
 
 def _get_provider() -> str:
-    return (os.getenv("PROVIDER") or os.getenv("MODEL") or "mock").strip().lower()
+    return (os.getenv("PROVIDER") or "mock").strip().lower()
 
 def _get_gemini_key() -> str | None:
-    return os.getenv("GEMINI_API_KEY") or (os.getenv("API_KEY") if _get_provider()=="gemini" else None)
+    return os.getenv("GEMINI_API_KEY")
 
 def _get_openai_key() -> str | None:
-    return os.getenv("OPENAI_API_KEY") or (os.getenv("API_KEY") if _get_provider()=="openai" else None)
+    return os.getenv("OPENAI_API_KEY")
 
 def _get_openai_model() -> str:
     return os.getenv("OPENAI_MODEL", "gpt-4o-mini")

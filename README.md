@@ -133,22 +133,18 @@ If no API key is provided or the API fails, the application automatically falls 
 
 ## Configuration
 
-**Important**: The `.env` file must be located in the `backend/` directory. The server must be restarted after making changes to the `.env` file.
+**Important**: Only `backend/.env` is used. Root `.env` is ignored. The server must be restarted after making changes to the `.env` file.
 
 ### Supported Environment Variables
 
-**New style (recommended):**
 ```env
 PROVIDER=gemini          # options: gemini | openai | mock
 GEMINI_API_KEY=your-gemini-key-here
 OPENAI_API_KEY=your-openai-key-here
 OPENAI_MODEL=gpt-4o-mini
-```
-
-**Legacy style (still works):**
-```env
-MODEL=gemini             # options: gemini | openai | mock
-API_KEY=your-api-key-here  # used for both Gemini and OpenAI
+HOST=0.0.0.0            # optional
+PORT=8000               # optional
+ALLOWED_ORIGINS=*       # optional
 ```
 
 ### Expected Logs
@@ -366,11 +362,13 @@ OPENAI_API_KEY=sk-your-api-key-here
 OPENAI_MODEL=gpt-4o-mini
 GEMINI_API_KEY=your-gemini-key-here
 
-# Server Configuration
+# Server Configuration (optional)
 PORT=8000
 HOST=0.0.0.0
 ALLOWED_ORIGINS=*
 ```
+
+**Note**: Only `backend/.env` is used. Root `.env` files are ignored.
 
 ## Project Structure
 

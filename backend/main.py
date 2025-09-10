@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Licensure Buddy IL", version="1.0.0")
 
 # CORS configuration
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+origins = ["http://localhost:5500","http://127.0.0.1:5500","http://localhost:5173","http://127.0.0.1:5173","*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=origins, 
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"], 
+    allow_headers=["*"]
 )
 
 # Load requirements data

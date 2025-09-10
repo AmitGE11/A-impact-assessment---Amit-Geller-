@@ -1,6 +1,41 @@
 from typing import List, Dict, Any, Generator
 from models import BusinessInput, MatchItem
 
+# Feature mapping from English keys to Hebrew names
+FEATURE_NAMES = {
+    "gas": "גז",
+    "meat": "בשר", 
+    "delivery": "משלוחים",
+    "alcohol": "הגשת אלכוהול",
+    "outdoor": "מקומות ישיבה חיצוניים",
+    "music": "מוסיקה/בידור",
+    "smoking": "אזור עישון",
+    "kitchen_hot": "מטבח חם",
+    "kitchen_cold": "מטבח קר בלבד",
+    "dairy": "מזון חלבי",
+    "fish": "מזון דגים",
+    "vegan": "טבעוני",
+    "night": "פתוח אחרי חצות",
+    "takeaway": "איסוף עצמי",
+    "grease_trap": "מלכודת שומן",
+    "hood_vent": "מנדף/מערכת יניקה תקינה",
+    "fire_ext": "מטפי כיבוי ניידים",
+    "sprinkler": "מערכת מתזים/ספרינקלרים",
+    "handwash": "עמדות שטיפת ידיים",
+    "refrigeration": "קירור מסחרי",
+    "freezer": "מקפיא/הקפאה",
+    "allergen_note": "הצהרת אלרגנים בתפריט",
+    "accessibility": "נגישות לנכים",
+    "signage": "רישיון ושילוט במקום בולט",
+    "pest_control": "הדברה תקופתית",
+    "waste_sep": "הפרדת פסולת/שמן בישול",
+    "gas_cert": "בדיקת גז בתוקף"
+}
+
+def get_feature_names(features: List[str]) -> List[str]:
+    """Convert English feature keys to Hebrew names."""
+    return [FEATURE_NAMES.get(feature, feature) for feature in features]
+
 def match_requirements(business: BusinessInput, rules: List[Dict[str, Any]]) -> List[MatchItem]:
     """
     Match business profile against requirements based on conditions with explanations.
@@ -73,19 +108,28 @@ def _match_requirements_generator(business: BusinessInput, rules: List[Dict[str,
             ok = bool(bset & fa)
             checks.append(ok)
             if ok: 
-                reasons.append(f"מאפיין כלשהו מזוהה: {sorted(list(bset & fa))}")
+                matched_features = sorted(list(bset & fa))
+                hebrew_names = get_feature_names(matched_features)
+                for feature, hebrew_name in zip(matched_features, hebrew_names):
+                    reasons.append(f"מאפיין זוהה : {hebrew_name}")
         
         if fall:
             ok = fall.issubset(bset)
             checks.append(ok)
             if ok: 
-                reasons.append(f"כל המאפיינים הדרושים קיימים: {sorted(list(fall))}")
+                required_features = sorted(list(fall))
+                hebrew_names = get_feature_names(required_features)
+                for feature, hebrew_name in zip(required_features, hebrew_names):
+                    reasons.append(f"מאפיין נדרש : {hebrew_name}")
         
         if fnone:
             ok = not (bset & fnone)
             checks.append(ok)
             if ok: 
-                reasons.append(f"נבדק שאין מאפיינים אסורים: {sorted(list(fnone))}")
+                forbidden_features = sorted(list(fnone))
+                hebrew_names = get_feature_names(forbidden_features)
+                for feature, hebrew_name in zip(forbidden_features, hebrew_names):
+                    reasons.append(f"מאפיין אסור לא קיים : {hebrew_name}")
 
         # if no conditions at all → treat as general rule (match everything)
         if not any([cond.get("size_any"), cond.get("min_seats") is not None, cond.get("max_seats") is not None,

@@ -170,6 +170,62 @@
 
             <section class="results-section" id="resultsSection" style="display: none;">
                 <h2>התאמות שנמצאו</h2>
+                
+                <!-- Statistics Summary -->
+                <div class="stats-section" id="statsSection">
+                    <h3>סיכום סטטיסטי</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalMatches">0</div>
+                            <div class="stat-label">סה"כ התאמות</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="highPriorityCount">0</div>
+                            <div class="stat-label">עדיפות גבוהה</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="mediumPriorityCount">0</div>
+                            <div class="stat-label">עדיפות בינונית</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="lowPriorityCount">0</div>
+                            <div class="stat-label">עדיפות נמוכה</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="priorityChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section" id="filterSection">
+                    <h3>סינון תוצאות</h3>
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label for="severityFilter">עדיפות:</label>
+                            <select id="severityFilter">
+                                <option value="all">הכל</option>
+                                <option value="High">גבוהה</option>
+                                <option value="Medium">בינונית</option>
+                                <option value="Low">נמוכה</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="categoryFilter">קטגוריה:</label>
+                            <select id="categoryFilter">
+                                <option value="all">הכל</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="featureFilter">מאפיין:</label>
+                            <select id="featureFilter">
+                                <option value="all">הכל</option>
+                            </select>
+                        </div>
+                        <button type="button" id="clearFilters" class="clear-filters-btn">נקה סינון</button>
+                    </div>
+                </div>
+
                 <div id="matchesContainer"></div>
             </section>
 
@@ -187,6 +243,7 @@
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

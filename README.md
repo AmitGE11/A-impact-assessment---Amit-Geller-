@@ -53,7 +53,17 @@ The backend will be available at `http://localhost:8000`
 
 ### 2. Open Frontend
 
-Open `frontend/index.html` in your web browser.
+Open `frontend/index.html` in your web browser (using Live Server or similar).
+
+**Note**: If the backend uses a different port, click "הגדר כתובת שרת" (Set API Base) on the page and enter the URL (e.g., `http://localhost:8080`).
+
+### 3. Health Check
+
+The application automatically checks the backend health on page load:
+- **השרת פעיל** (Server Active) - Backend is running
+- **השרת לא זמין** (Server Unavailable) - Backend is not accessible
+
+Health endpoint: `/api/health`
 
 ## Using the Questionnaire
 

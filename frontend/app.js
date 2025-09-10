@@ -290,65 +290,6 @@ function formatHebrewArrows(text) {
         .replace(/≤/g, '<span class="arrow">≤</span>');
 }
 
-// Health check on page load
-async function checkHealth() {
-    const statusDiv = document.getElementById('apiBaseStatus');
-    
-    try {
-        const response = await fetch(`${getApiBase()}/api/health`);
-        if (response.ok) {
-            showServerStatus('השרת פעיל', 'success');
-            if (statusDiv) {
-                statusDiv.textContent = 'השרת זמין!';
-                statusDiv.style.color = '#4CAF50';
-            }
-        } else {
-            showServerStatus('השרת לא זמין', 'error');
-            if (statusDiv) {
-                statusDiv.textContent = 'השרת לא זמין';
-                statusDiv.style.color = '#f44336';
-            }
-        }
-    } catch (error) {
-        console.warn('Backend not available:', error);
-        showServerStatus('השרת לא זמין', 'error');
-        if (statusDiv) {
-            statusDiv.textContent = 'שגיאה בחיבור לשרת';
-            statusDiv.style.color = '#f44336';
-        }
-    }
-}
-
-// Show server status
-function showServerStatus(message, type) {
-    let statusBanner = document.getElementById('serverStatus');
-    if (!statusBanner) {
-        statusBanner = document.createElement('div');
-        statusBanner.id = 'serverStatus';
-        statusBanner.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-weight: bold;
-            z-index: 1000;
-            max-width: 200px;
-        `;
-        document.body.appendChild(statusBanner);
-    }
-    
-    statusBanner.textContent = message;
-    statusBanner.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
-    statusBanner.style.color = 'white';
-    
-    // Show API base selector if server is not available
-    if (type === 'error') {
-        showApiBaseSelector();
-    } else {
-        hideApiBaseSelector();
-    }
-}
 
 // Show API base selector
 function showApiBaseSelector() {
@@ -417,8 +358,7 @@ function setApiBase() {
             statusDiv.style.color = '#007bff';
         }
         
-        // Re-run health check
-        checkHealth();
+        // API base updated
     } else {
         console.log('No API base provided');
         if (statusDiv) {
@@ -614,5 +554,7 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// Check backend health on page load
-document.addEventListener('DOMContentLoaded', checkHealth);
+// Page loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Page initialization complete
+});

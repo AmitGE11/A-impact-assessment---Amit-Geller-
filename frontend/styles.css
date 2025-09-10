@@ -14,7 +14,7 @@ body {
 }
 
 .container {
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
     background-color: white;
@@ -58,6 +58,17 @@ header p {
 
 .form-group {
     margin-bottom: 20px;
+}
+
+.input-fields-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.input-fields-row .form-group {
+    flex: 1;
+    margin-bottom: 0;
 }
 
 .form-group label {
@@ -383,6 +394,11 @@ footer {
     .radio-group, .checkbox-group {
         flex-direction: column;
         gap: 10px;
+    }
+    
+    .input-fields-row {
+        flex-direction: column;
+        gap: 15px;
     }
     
     .match-header {

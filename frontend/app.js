@@ -10,6 +10,9 @@ function getApiBase() {
     return "http://localhost:8000";
 }
 
+// Set API_BASE for compatibility
+const API_BASE = getApiBase();
+
 // DOM elements
 const form = document.getElementById('businessForm');
 const submitBtn = document.getElementById('submitBtn');
@@ -289,6 +292,54 @@ function formatHebrewArrows(text) {
     return text
         .replace(/≥/g, '<span class="arrow">≥</span>')
         .replace(/≤/g, '<span class="arrow">≤</span>');
+}
+
+// AI Button Label Helper
+async function setAIButtonLabel() {
+  const btn = document.getElementById("ai-report-btn");
+  if (!btn) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/ai/status`);
+    const data = await res.json();
+    const provider = (data.provider || 'mock').toLowerCase();
+    btn.textContent = (provider === 'mock') ? 'Mock - דוח חכם' : 'AI - דוח חכם';
+    btn.dataset.provider = provider;
+  } catch (e) {
+    console.warn("Could not check AI model status", e);
+    if (btn) {
+      btn.textContent = 'Mock - דוח חכם';
+      btn.dataset.provider = 'mock';
+    }
+  }
+}
+
+// Harden the report generation call
+async function generateSmartReport(payload) {
+  try {
+    const res = await fetch(`${API_BASE}/api/report`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const msg = `HTTP error! status: ${res.status}`;
+      console.error('Error generating smart report:', msg);
+      showReportModal('שגיאה ביצירת הדוח החכם: ' + msg);
+      return;
+    }
+    const data = await res.json();
+    showReportModal(data.report);
+  } catch (e) {
+    console.error('Network/JS error while generating report', e);
+    showReportModal('שגיאת רשת/דפדפן ביצירת הדוח החכם.');
+  }
+}
+
+// Show report modal (placeholder - will be implemented)
+function showReportModal(content) {
+  // This function should display the report in a modal
+  // For now, we'll use alert as a fallback
+  alert(content);
 }
 
 
@@ -635,4 +686,6 @@ function updateSmartReportButton(provider) {
 document.addEventListener('DOMContentLoaded', function() {
     // Check AI model status on page load
     checkAIModelStatus();
+    // Set AI button label
+    setAIButtonLabel();
 });

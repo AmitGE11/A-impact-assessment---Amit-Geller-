@@ -71,6 +71,11 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "ok"}
 
+@app.get("/api/ai/status")
+def ai_status():
+    provider = (os.getenv("PROVIDER") or "mock").lower()
+    return {"provider": provider}
+
 @app.get("/api/requirements")
 async def get_requirements():
     """Get all requirements from sample data"""
@@ -94,13 +99,13 @@ async def match_business_requirements(business: BusinessInput):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/report", response_model=ReportResponse)
-async def generate_business_report(request: ReportRequest):
-    """Generate AI-powered compliance report"""
+def report(req: ReportRequest):
     try:
-        result = generate_report(request)
-        return ReportResponse(report=result["report"], metadata=result["metadata"])
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        data = generate_report(req.business, req.matches)
+        return ReportResponse(**data)
+    except Exception:
+        logging.getLogger("main").exception("Report generation failed")
+        raise HTTPException(status_code=500, detail="AI report generation failed")
 
 if __name__ == "__main__":
     import uvicorn

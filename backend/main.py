@@ -86,8 +86,8 @@ async def match_business_requirements(business: BusinessInput):
 async def generate_business_report(request: ReportRequest):
     """Generate AI-powered compliance report"""
     try:
-        report_text = generate_report(request)
-        return ReportResponse(report=report_text)
+        result = generate_report(request)
+        return ReportResponse(report=result["report"], metadata=result["metadata"])
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

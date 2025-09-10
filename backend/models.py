@@ -56,3 +56,4 @@ class ReportRequest(BaseModel):
 class ReportResponse(BaseModel):
     """Response containing generated report"""
     report: str
+    metadata: Optional[Dict[str, Any]] = None

@@ -18,6 +18,9 @@ const matchesContainer = document.getElementById('matchesContainer');
 const reportSection = document.getElementById('reportSection');
 const reportLoading = document.getElementById('reportLoading');
 const reportContent = document.getElementById('reportContent');
+const modelBadge = document.getElementById('modelBadge');
+const copyReportBtn = document.getElementById('copyReportBtn');
+const downloadReportBtn = document.getElementById('downloadReportBtn');
 
 // Statistics and filter elements
 const statsSection = document.getElementById('statsSection');
@@ -293,7 +296,18 @@ async function generateReport(business, requirements) {
         }
 
         const reportData = await reportResponse.json();
-        reportContent.textContent = reportData.report;
+        
+        // Display the report with proper formatting
+        reportContent.innerHTML = formatReportContent(reportData.report);
+        
+        // Show model badge and action buttons
+        if (reportData.metadata) {
+            modelBadge.textContent = `מודל בשימוש: ${reportData.metadata.model || 'Mock'}`;
+            modelBadge.style.display = 'inline-block';
+        }
+        
+        copyReportBtn.style.display = 'inline-flex';
+        downloadReportBtn.style.display = 'inline-flex';
 
     } catch (error) {
         console.error('Error generating report:', error);
@@ -457,6 +471,72 @@ function setApiBase() {
     }
 }
 
+// Format report content for better display
+function formatReportContent(reportText) {
+    // Convert markdown-like formatting to HTML
+    return reportText
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+        .replace(/^- (.*$)/gim, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>)/gims, '<ul>$1</ul>')
+        .replace(/---/g, '<hr>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>');
+}
+
+// Copy report to clipboard
+async function copyReportToClipboard() {
+    try {
+        const reportText = reportContent.textContent || reportContent.innerText;
+        await navigator.clipboard.writeText(reportText);
+        
+        // Show success feedback
+        const originalText = copyReportBtn.textContent;
+        copyReportBtn.textContent = '✅ הועתק!';
+        copyReportBtn.style.background = '#28a745';
+        
+        setTimeout(() => {
+            copyReportBtn.textContent = originalText;
+            copyReportBtn.style.background = '#28a745';
+        }, 2000);
+    } catch (error) {
+        console.error('Failed to copy report:', error);
+        alert('שגיאה בהעתקת הדוח. אנא נסה שוב.');
+    }
+}
+
+// Download report as text file
+function downloadReportAsText() {
+    try {
+        const reportText = reportContent.textContent || reportContent.innerText;
+        const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `דוח_רישוי_עסק_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        // Show success feedback
+        const originalText = downloadReportBtn.textContent;
+        downloadReportBtn.textContent = '✅ הורד!';
+        downloadReportBtn.style.background = '#17a2b8';
+        
+        setTimeout(() => {
+            downloadReportBtn.textContent = originalText;
+            downloadReportBtn.style.background = '#17a2b8';
+        }, 2000);
+    } catch (error) {
+        console.error('Failed to download report:', error);
+        alert('שגיאה בהורדת הדוח. אנא נסה שוב.');
+    }
+}
+
 // Make setApiBase globally accessible
 window.setApiBase = setApiBase;
 
@@ -465,6 +545,10 @@ severityFilter.addEventListener('change', filterMatches);
 categoryFilter.addEventListener('change', filterMatches);
 featureFilter.addEventListener('change', filterMatches);
 clearFiltersBtn.addEventListener('click', clearFilters);
+
+// Add event listeners for report actions
+copyReportBtn.addEventListener('click', copyReportToClipboard);
+downloadReportBtn.addEventListener('click', downloadReportAsText);
 
 // Check backend health on page load
 document.addEventListener('DOMContentLoaded', checkHealth);

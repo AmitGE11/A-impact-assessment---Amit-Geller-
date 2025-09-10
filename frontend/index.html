@@ -230,11 +230,22 @@
             </section>
 
             <section class="report-section" id="reportSection" style="display: none;">
-                <h2>דוח חכם</h2>
+                <div class="report-header">
+                    <h2>דוח חכם</h2>
+                    <div class="report-actions">
+                        <span class="model-badge" id="modelBadge" style="display: none;"></span>
+                        <button type="button" id="copyReportBtn" class="action-btn copy-btn" style="display: none;">
+                            📋 העתקה
+                        </button>
+                        <button type="button" id="downloadReportBtn" class="action-btn download-btn" style="display: none;">
+                            💾 הורדה (.txt)
+                        </button>
+                    </div>
+                </div>
                 <div class="loading" id="reportLoading" style="display: none;">
                     יוצר דוח...
                 </div>
-                <pre id="reportContent"></pre>
+                <div id="reportContent" class="report-content"></div>
             </section>
         </main>
 

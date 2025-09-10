@@ -45,15 +45,23 @@ def build_prompt(business: BusinessInput, matched: List[RequirementItem]) -> str
     
     return prompt
 
-def generate_report(request: ReportRequest) -> str:
+def generate_report(request: ReportRequest) -> dict:
     """
     Generate a compliance report using OpenAI API or return a mock report.
+    Returns dict with 'report' and 'metadata' keys.
     """
     api_key = os.getenv("OPENAI_API_KEY")
     model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     
-    if not api_key or api_key == "sk-xxx":
-        return _generate_mock_report(request.business, request.requirements)
+    if not api_key or api_key == "sk-xxx" or api_key.startswith("sk-..."):
+        return {
+            "report": _generate_mock_report(request.business, request.requirements),
+            "metadata": {
+                "model": "Mock",
+                "api_used": False,
+                "timestamp": None
+            }
+        }
     
     try:
         import openai
@@ -67,15 +75,30 @@ def generate_report(request: ReportRequest) -> str:
                 {"role": "system", "content": "אתה מומחה לרישוי עסקים בישראל. תמיד ענה בעברית."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=2000,
-            temperature=0.7
+            max_tokens=1200,
+            temperature=0.3
         )
         
-        return response.choices[0].message.content
+        return {
+            "report": response.choices[0].message.content,
+            "metadata": {
+                "model": model,
+                "api_used": True,
+                "timestamp": response.created
+            }
+        }
         
     except Exception as e:
         # Fallback to mock report if API fails
-        return _generate_mock_report(request.business, request.requirements)
+        return {
+            "report": _generate_mock_report(request.business, request.requirements),
+            "metadata": {
+                "model": "Mock (API Error)",
+                "api_used": False,
+                "timestamp": None,
+                "error": str(e)
+            }
+        }
 
 def _generate_mock_report(business: BusinessInput, requirements: List[RequirementItem]) -> str:
     """

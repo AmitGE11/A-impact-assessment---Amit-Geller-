@@ -65,6 +65,52 @@ The application automatically checks the backend health on page load:
 
 Health endpoint: `/api/health`
 
+## How to Enable AI Report
+
+The application can generate AI-powered compliance reports using OpenAI's API. Without an API key, it falls back to a deterministic mock report.
+
+### 1. Get OpenAI API Key
+
+1. Visit [OpenAI Platform](https://platform.openai.com/account/api-keys)
+2. Sign up or log in to your account
+3. Create a new API key
+4. Copy the key (starts with `sk-`)
+
+### 2. Configure Environment
+
+1. Navigate to the `backend` directory
+2. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+3. Edit `backend/.env` and add your API key:
+   ```
+   OPENAI_API_KEY=sk-proj-XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+   OPENAI_MODEL=gpt-4o-mini
+   ```
+
+### 3. Optional Model Configuration
+
+You can change the AI model by modifying `OPENAI_MODEL` in `.env`:
+- `gpt-4o-mini` (default, cost-effective)
+- `gpt-4o` (more capable)
+- `gpt-3.5-turbo` (legacy, cheaper)
+
+### 4. Test AI Integration
+
+1. Start the backend server
+2. Open the frontend
+3. Fill out the business questionnaire
+4. Generate a report
+5. Look for the model badge showing "מודל בשימוש: gpt-4o-mini" (or your selected model)
+
+### 5. Mock Mode
+
+If no API key is provided or the API fails, the application automatically falls back to mock mode:
+- Shows "מודל בשימוש: Mock" badge
+- Generates a structured Hebrew report based on matched requirements
+- No external API calls are made
+
 ## Using the Questionnaire
 
 The digital questionnaire supports comprehensive business feature selection:

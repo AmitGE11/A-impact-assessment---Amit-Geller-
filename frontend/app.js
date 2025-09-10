@@ -466,8 +466,12 @@ async function generateSmartReport() {
         
         // Show model badge and action buttons
         if (reportData.metadata) {
-            modalModelBadge.textContent = `מודל בשימוש: ${reportData.metadata.model || 'Mock'}`;
+            const modelName = reportData.metadata.model || 'Mock';
+            modalModelBadge.textContent = `מודל בשימוש: ${modelName}`;
             modalModelBadge.style.display = 'inline-block';
+            
+            // Update the button to reflect the actual model used
+            updateSmartReportButton(modelName);
         }
         
         modalCopyBtn.style.display = 'inline-flex';
@@ -557,7 +561,68 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
+// Check AI model status and update button
+async function checkAIModelStatus() {
+    try {
+        // Make a test request to see if we get a real AI model or mock
+        const testBusiness = {
+            business_name: "Test Business",
+            size: "small",
+            seats: 10,
+            area_sqm: 50,
+            staff_count: 2,
+            features: []
+        };
+        
+        const testRequirements = [
+            {
+                id: "test",
+                title: "Test Requirement",
+                category: "Test",
+                priority: "Low",
+                description: "Test description"
+            }
+        ];
+        
+        const reportRequest = {
+            business: testBusiness,
+            requirements: testRequirements
+        };
+        
+        const response = await fetch(`${getApiBase()}/api/report`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(reportRequest)
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const modelName = data.metadata?.model || 'Mock';
+            updateSmartReportButton(modelName);
+        } else {
+            updateSmartReportButton('Mock');
+        }
+    } catch (error) {
+        console.warn('Could not check AI model status:', error);
+        updateSmartReportButton('Mock');
+    }
+}
+
+// Update the Smart Report button text based on model
+function updateSmartReportButton(modelName) {
+    if (modelName === 'Mock' || modelName.includes('Mock')) {
+        smartReportBtn.textContent = 'דוח חכם - Mock';
+        smartReportBtn.style.background = 'linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%)';
+    } else {
+        smartReportBtn.textContent = `דוח חכם - ${modelName}`;
+        smartReportBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }
+}
+
 // Page loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Page initialization complete
+    // Check AI model status on page load
+    checkAIModelStatus();
 });

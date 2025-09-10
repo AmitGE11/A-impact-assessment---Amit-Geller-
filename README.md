@@ -131,6 +131,28 @@ If no API key is provided or the API fails, the application automatically falls 
 
 **Important**: The `.env` file must be located in the `backend/` directory, not in the repository root. The application loads environment variables from `backend/.env` specifically.
 
+## Configuration
+
+Put your config in `backend/.env`. Either use:
+
+**Preferred style:**
+```env
+PROVIDER=gemini
+GEMINI_API_KEY=your-gemini-key-here
+```
+
+**Legacy style (still works):**
+```env
+MODEL=gemini
+API_KEY=your-gemini-key-here
+```
+
+**Restart the backend** after making changes. In logs you should see:
+- `Startup provider: gemini` (at startup)
+- `AI provider configured: gemini` (when generating reports)
+
+**The UI badge** shows which provider was used: "מודל בשימוש: gemini"
+
 ## Troubleshooting
 
 ### Badge shows 'mock' while PROVIDER=gemini

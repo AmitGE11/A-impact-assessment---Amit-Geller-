@@ -1,18 +1,37 @@
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+
 import os
-import requests
-import json
 import logging
+import requests
 from typing import List
 from models import BusinessInput, RequirementItem, ReportRequest
 
-# Provider configuration
-PROVIDER = os.getenv("PROVIDER", "mock").lower()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-
 # Logger
 log = logging.getLogger("report")
+
+def _get_provider() -> str:
+    """
+    Provider can come from PROVIDER or (legacy) MODEL.
+    Supported values: gemini | openai | mock
+    """
+    val = os.getenv("PROVIDER") or os.getenv("MODEL") or "mock"
+    val = (val or "mock").strip().lower()
+    if val in ("gemini", "openai", "mock"):
+        return val
+    return "mock"
+
+def _get_openai_key() -> str | None:
+    # prefer OPENAI_API_KEY, fallback to API_KEY when provider=openai
+    return os.getenv("OPENAI_API_KEY") or (os.getenv("API_KEY") if _get_provider()=="openai" else None)
+
+def _get_openai_model() -> str:
+    return os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+def _get_gemini_key() -> str | None:
+    # prefer GEMINI_API_KEY, fallback to API_KEY when provider=gemini
+    return os.getenv("GEMINI_API_KEY") or (os.getenv("API_KEY") if _get_provider()=="gemini" else None)
 
 def _gemini_extract_text(data: dict) -> str:
     """Safely extract text from Gemini API response."""
@@ -75,14 +94,15 @@ def build_prompt(business: BusinessInput, matched: List[RequirementItem]) -> str
 
 def _gemini_report(business: BusinessInput, matches: List[RequirementItem]) -> dict:
     """Generate a compliance report using Google Gemini API."""
-    if not GEMINI_API_KEY:
-        log.warning("Gemini selected but GEMINI_API_KEY missing; falling back to mock.")
+    api_key = _get_gemini_key()
+    if not api_key:
+        log.warning("Gemini selected but no API key found; falling back to mock.")
         return {
             "report": _generate_mock_report(business, matches),
             "metadata": {"mode": "mock", "provider": "gemini", "reason": "missing_key"}
         }
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
     prompt = build_prompt(business, matches)
     body = {"contents": [{"parts": [{"text": prompt}]}]}
     
@@ -100,7 +120,7 @@ def _gemini_report(business: BusinessInput, matches: List[RequirementItem]) -> d
         data = r.json()
         text = _gemini_extract_text(data)
         if not text:
-            log.warning("Gemini returned 200 but empty text; data keys=%s", list(data.keys()))
+            log.warning("Gemini returned 200 but empty text.")
             return {
                 "report": _generate_mock_report(business, matches) + "\n\n> Gemini returned empty content.",
                 "metadata": {"mode": "mock", "provider": "gemini", "http": 200}
@@ -118,48 +138,42 @@ def _gemini_report(business: BusinessInput, matches: List[RequirementItem]) -> d
         }
 
 def _openai_report(business: BusinessInput, matches: List[RequirementItem]) -> dict:
-    """
-    Generate a compliance report using OpenAI API.
-    """
-    try:
-        import openai
-        client = openai.OpenAI(api_key=OPENAI_API_KEY)
-        
-        prompt = build_prompt(business, matches)
-        
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": "אתה מומחה לרישוי עסקים בישראל. תמיד ענה בעברית."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1200,
-            temperature=0.3
-        )
-        
-        return {
-            "report": response.choices[0].message.content,
-            "metadata": {
-                "mode": "live",
-                "provider": "openai",
-                "model": OPENAI_MODEL,
-                "api_used": True,
-                "timestamp": response.created
-            }
-        }
-        
-    except Exception as e:
-        # Fallback to mock report if API fails
+    """Generate a compliance report using OpenAI API."""
+    from openai import OpenAI, RateLimitError, APIError, APITimeoutError
+    
+    key = _get_openai_key()
+    if not key:
+        log.warning("OpenAI selected but no API key found; falling back to mock.")
         return {
             "report": _generate_mock_report(business, matches),
-            "metadata": {
-                "mode": "mock",
-                "provider": "openai",
-                "model": "Mock (API Error)",
-                "api_used": False,
-                "timestamp": None,
-                "error": str(e)
-            }
+            "metadata": {"mode": "mock", "provider": "openai", "reason": "missing_key"}
+        }
+    
+    client = OpenAI(api_key=key)
+    model = _get_openai_model()
+    prompt = build_prompt(business, matches)
+    
+    try:
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "אתה יועץ רגולציה. כתוב בעברית פשוטה ועניינית."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1000,
+            timeout=30,
+        )
+        text = resp.choices[0].message.content.strip()
+        return {
+            "report": text, 
+            "metadata": {"mode": "live", "provider": "openai", "model": model}
+        }
+    except Exception as e:
+        log.exception("OpenAI exception")
+        return {
+            "report": _generate_mock_report(business, matches) + f"\n\n> OpenAI exception: {e}",
+            "metadata": {"mode": "mock", "provider": "openai", "exception": True}
         }
 
 def generate_report(request: ReportRequest) -> dict:
@@ -167,15 +181,13 @@ def generate_report(request: ReportRequest) -> dict:
     Generate a compliance report using the configured provider (OpenAI, Gemini, or Mock).
     Returns dict with 'report' and 'metadata' keys.
     """
-    log.info("AI provider configured: %s", PROVIDER)
+    provider = _get_provider()
+    log.info("AI provider configured: %s", provider)
     
-    if PROVIDER == "gemini":
+    if provider == "gemini":
         return _gemini_report(request.business, request.requirements)
-    elif PROVIDER == "openai":
-        res = _openai_report(request.business, request.requirements)
-        if "metadata" in res: 
-            res["metadata"].setdefault("provider", "openai")
-        return res
+    elif provider == "openai":
+        return _openai_report(request.business, request.requirements)
     else:
         return {
             "report": _generate_mock_report(request.business, request.requirements),

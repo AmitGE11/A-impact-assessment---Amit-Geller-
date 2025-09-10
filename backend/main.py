@@ -1,26 +1,24 @@
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+
 import os
 import logging
 from typing import List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 import json
-from pathlib import Path
 
 from models import BusinessInput, MatchResponse, ReportRequest, ReportResponse
 from services.matcher import match_requirements
 from services.report import generate_report
 
-# Load environment variables from backend/.env
-load_dotenv(dotenv_path=Path(__file__).parent / ".env")
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Log provider configuration at startup
-provider = os.getenv("PROVIDER", "mock").lower()
-logger.info("AI Provider configured: %s", provider)
+# Log startup provider
+logging.getLogger("main").info("Startup provider: %s", os.getenv("PROVIDER") or os.getenv("MODEL") or "<unset>")
 
 app = FastAPI(title="Licensure Buddy IL", version="1.0.0")
 

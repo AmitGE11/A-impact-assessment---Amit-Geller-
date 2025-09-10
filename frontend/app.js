@@ -15,12 +15,8 @@ const form = document.getElementById('businessForm');
 const submitBtn = document.getElementById('submitBtn');
 const resultsSection = document.getElementById('resultsSection');
 const matchesContainer = document.getElementById('matchesContainer');
-const reportSection = document.getElementById('reportSection');
-const reportLoading = document.getElementById('reportLoading');
-const reportContent = document.getElementById('reportContent');
-const modelBadge = document.getElementById('modelBadge');
-const copyReportBtn = document.getElementById('copyReportBtn');
-const downloadReportBtn = document.getElementById('downloadReportBtn');
+// Old report section elements removed - now using modal only
+
 
 // Smart Report Modal elements
 const smartReportBtn = document.getElementById('smartReportBtn');
@@ -72,9 +68,7 @@ form.addEventListener('submit', async (e) => {
         
         // Show loading in results areas
         matchesContainer.innerHTML = '<div class="loading">טוען התאמות...</div>';
-        reportContent.textContent = 'טוען דוח...';
         resultsSection.style.display = 'block';
-        reportSection.style.display = 'block';
 
         // Call match API
         const matchResponse = await fetch(`${getApiBase()}/api/match`, {
@@ -96,16 +90,12 @@ form.addEventListener('submit', async (e) => {
         displayMatches(allMatches);
         updateStatistics(allMatches);
         updateFilterOptions(allMatches);
-        
-        // Generate report
-        await generateReport(business, matchData.matched);
 
     } catch (error) {
         console.error('Error:', error);
         alert('שגיאה בחיפוש דרישות רישוי. אנא נסה שוב.');
         // Show error in containers
         matchesContainer.innerHTML = '<div class="error">שגיאה בטעינת התאמות: ' + error.message + '</div>';
-        reportContent.textContent = 'שגיאה ביצירת הדוח: ' + error.message;
     } finally {
         // Reset button state
         submitBtn.disabled = false;
@@ -283,50 +273,6 @@ function clearFilters() {
     updateStatistics(allMatches);
 }
 
-async function generateReport(business, requirements) {
-    try {
-        reportLoading.style.display = 'block';
-        reportContent.textContent = '';
-        reportSection.style.display = 'block';
-
-        const reportRequest = {
-            business: business,
-            requirements: requirements
-        };
-
-        const reportResponse = await fetch(`${getApiBase()}/api/report`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(reportRequest)
-        });
-
-        if (!reportResponse.ok) {
-            throw new Error(`HTTP error! status: ${reportResponse.status}`);
-        }
-
-        const reportData = await reportResponse.json();
-        
-        // Display the report with proper formatting
-        reportContent.innerHTML = formatReportContent(reportData.report);
-        
-        // Show model badge and action buttons
-        if (reportData.metadata) {
-            modelBadge.textContent = `מודל בשימוש: ${reportData.metadata.model || 'Mock'}`;
-            modelBadge.style.display = 'inline-block';
-        }
-        
-        copyReportBtn.style.display = 'inline-flex';
-        downloadReportBtn.style.display = 'inline-flex';
-
-    } catch (error) {
-        console.error('Error generating report:', error);
-        reportContent.textContent = 'שגיאה ביצירת הדוח: ' + error.message;
-    } finally {
-        reportLoading.style.display = 'none';
-    }
-}
 
 function getPriorityText(priority) {
     const priorityMap = {
@@ -497,56 +443,6 @@ function formatReportContent(reportText) {
         .replace(/\n/g, '<br>');
 }
 
-// Copy report to clipboard
-async function copyReportToClipboard() {
-    try {
-        const reportText = reportContent.textContent || reportContent.innerText;
-        await navigator.clipboard.writeText(reportText);
-        
-        // Show success feedback
-        const originalText = copyReportBtn.textContent;
-        copyReportBtn.textContent = '✅ הועתק!';
-        copyReportBtn.style.background = '#28a745';
-        
-        setTimeout(() => {
-            copyReportBtn.textContent = originalText;
-            copyReportBtn.style.background = '#28a745';
-        }, 2000);
-    } catch (error) {
-        console.error('Failed to copy report:', error);
-        alert('שגיאה בהעתקת הדוח. אנא נסה שוב.');
-    }
-}
-
-// Download report as text file
-function downloadReportAsText() {
-    try {
-        const reportText = reportContent.textContent || reportContent.innerText;
-        const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `דוח_רישוי_עסק_${new Date().toISOString().split('T')[0]}.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        // Show success feedback
-        const originalText = downloadReportBtn.textContent;
-        downloadReportBtn.textContent = '✅ הורד!';
-        downloadReportBtn.style.background = '#17a2b8';
-        
-        setTimeout(() => {
-            downloadReportBtn.textContent = originalText;
-            downloadReportBtn.style.background = '#17a2b8';
-        }, 2000);
-    } catch (error) {
-        console.error('Failed to download report:', error);
-        alert('שגיאה בהורדת הדוח. אנא נסה שוב.');
-    }
-}
 
 // Smart Report Modal Functions
 function openSmartReportModal() {
@@ -702,9 +598,7 @@ categoryFilter.addEventListener('change', filterMatches);
 featureFilter.addEventListener('change', filterMatches);
 clearFiltersBtn.addEventListener('click', clearFilters);
 
-// Add event listeners for report actions
-copyReportBtn.addEventListener('click', copyReportToClipboard);
-downloadReportBtn.addEventListener('click', downloadReportAsText);
+// Old report action listeners removed - now using modal only
 
 // Add event listeners for smart report modal
 smartReportBtn.addEventListener('click', openSmartReportModal);

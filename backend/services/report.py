@@ -1,6 +1,5 @@
-from pathlib import Path
-from dotenv import load_dotenv
-load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv(filename=".env", raise_error_if_not_found=False), override=True)
 
 import os
 import logging
@@ -12,26 +11,16 @@ from models import BusinessInput, RequirementItem, ReportRequest
 log = logging.getLogger("report")
 
 def _get_provider() -> str:
-    """
-    Provider can come from PROVIDER or (legacy) MODEL.
-    Supported values: gemini | openai | mock
-    """
-    val = os.getenv("PROVIDER") or os.getenv("MODEL") or "mock"
-    val = (val or "mock").strip().lower()
-    if val in ("gemini", "openai", "mock"):
-        return val
-    return "mock"
+    return (os.getenv("PROVIDER") or os.getenv("MODEL") or "mock").strip().lower()
+
+def _get_gemini_key() -> str | None:
+    return os.getenv("GEMINI_API_KEY") or (os.getenv("API_KEY") if _get_provider()=="gemini" else None)
 
 def _get_openai_key() -> str | None:
-    # prefer OPENAI_API_KEY, fallback to API_KEY when provider=openai
     return os.getenv("OPENAI_API_KEY") or (os.getenv("API_KEY") if _get_provider()=="openai" else None)
 
 def _get_openai_model() -> str:
     return os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-
-def _get_gemini_key() -> str | None:
-    # prefer GEMINI_API_KEY, fallback to API_KEY when provider=gemini
-    return os.getenv("GEMINI_API_KEY") or (os.getenv("API_KEY") if _get_provider()=="gemini" else None)
 
 def _gemini_extract_text(data: dict) -> str:
     """Safely extract text from Gemini API response."""
@@ -176,23 +165,19 @@ def _openai_report(business: BusinessInput, matches: List[RequirementItem]) -> d
             "metadata": {"mode": "mock", "provider": "openai", "exception": True}
         }
 
-def generate_report(request: ReportRequest) -> dict:
-    """
-    Generate a compliance report using the configured provider (OpenAI, Gemini, or Mock).
-    Returns dict with 'report' and 'metadata' keys.
-    """
+def generate_report(business, matches):
+    """Generate a compliance report using the configured provider (OpenAI, Gemini, or Mock)."""
     provider = _get_provider()
     log.info("AI provider configured: %s", provider)
     
     if provider == "gemini":
-        return _gemini_report(request.business, request.requirements)
-    elif provider == "openai":
-        return _openai_report(request.business, request.requirements)
-    else:
-        return {
-            "report": _generate_mock_report(request.business, request.requirements),
-            "metadata": {"mode": "mock", "provider": "mock"}
-        }
+        return _gemini_report(business, matches)
+    if provider == "openai":
+        return _openai_report(business, matches)
+    return {
+        "report": _generate_mock_report(business, matches),
+        "metadata": {"mode": "mock", "provider": "mock"}
+    }
 
 def _generate_mock_report(business: BusinessInput, requirements: List[RequirementItem]) -> str:
     """

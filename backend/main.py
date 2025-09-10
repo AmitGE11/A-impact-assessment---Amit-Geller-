@@ -1,10 +1,10 @@
-from pathlib import Path
-from dotenv import load_dotenv
-load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv(filename=".env", raise_error_if_not_found=False), override=True)
 
 import os
 import logging
 from typing import List
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import json
@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Log startup provider
+import os, logging
 logging.getLogger("main").info("Startup provider: %s", os.getenv("PROVIDER") or os.getenv("MODEL") or "<unset>")
 
 app = FastAPI(title="Licensure Buddy IL", version="1.0.0")

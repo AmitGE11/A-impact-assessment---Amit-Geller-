@@ -133,23 +133,29 @@ If no API key is provided or the API fails, the application automatically falls 
 
 ## Configuration
 
-Put your config in `backend/.env`. Either use:
+**Important**: The `.env` file must be located in the `backend/` directory. The server must be restarted after making changes to the `.env` file.
 
-**Preferred style:**
+### Supported Environment Variables
+
+**New style (recommended):**
 ```env
-PROVIDER=gemini
+PROVIDER=gemini          # options: gemini | openai | mock
 GEMINI_API_KEY=your-gemini-key-here
+OPENAI_API_KEY=your-openai-key-here
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 **Legacy style (still works):**
 ```env
-MODEL=gemini
-API_KEY=your-gemini-key-here
+MODEL=gemini             # options: gemini | openai | mock
+API_KEY=your-api-key-here  # used for both Gemini and OpenAI
 ```
 
-**Restart the backend** after making changes. In logs you should see:
-- `Startup provider: gemini` (at startup)
-- `AI provider configured: gemini` (when generating reports)
+### Expected Logs
+
+After restarting the backend, you should see:
+- `INFO:main:Startup provider: gemini` (at startup)
+- `INFO:report:AI provider configured: gemini` (when generating reports)
 
 **The UI badge** shows which provider was used: "מודל בשימוש: gemini"
 

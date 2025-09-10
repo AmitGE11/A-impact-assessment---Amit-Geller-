@@ -1,10 +1,16 @@
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 
 ENV_PATH = Path(__file__).resolve().parent / ".env"
-load_dotenv(dotenv_path=ENV_PATH, override=True)
+# Force UTF-8 and override
+load_dotenv(ENV_PATH, override=True, encoding="utf-8")
 
+# If PROVIDER is still empty, parse and inject manually
 import os
+if not (os.getenv("PROVIDER") or "").strip():
+    vals = dotenv_values(ENV_PATH)
+    os.environ.update({k:str(v) for k,v in vals.items() if v is not None})
+
 import logging
 from typing import List
 from fastapi import FastAPI, HTTPException

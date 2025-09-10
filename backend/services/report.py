@@ -1,10 +1,14 @@
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 
 ENV_PATH = Path(__file__).resolve().parent / ".env"
-load_dotenv(dotenv_path=ENV_PATH, override=True)
+load_dotenv(ENV_PATH, override=True, encoding="utf-8")
 
 import os
+if not (os.getenv("PROVIDER") or "").strip():
+    vals = dotenv_values(ENV_PATH)
+    os.environ.update({k:str(v) for k,v in vals.items() if v is not None})
+
 import logging
 import requests
 from typing import List

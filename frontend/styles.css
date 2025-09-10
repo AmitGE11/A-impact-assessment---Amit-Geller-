@@ -105,6 +105,23 @@ input[type="number"] {
     font-size: 16px;
 }
 
+/* Business name input field - make it bigger */
+#business_name {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    min-height: 50px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+
+#business_name:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
+
 button[type="submit"] {
     background-color: #3498db;
     color: white;

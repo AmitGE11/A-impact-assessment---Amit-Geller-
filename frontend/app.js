@@ -55,6 +55,7 @@ form.addEventListener('submit', async (e) => {
         // Get form data
         const formData = new FormData(form);
         const business = {
+            business_name: formData.get('business_name'),
             size: formData.get('size'),
             seats: parseInt(formData.get('seats')) || 0, // Defensive: treat empty as 0
             area_sqm: parseInt(formData.get('area_sqm')) || 0,
@@ -291,6 +292,7 @@ function formatHebrewArrows(text) {
 }
 
 
+
 // Show API base selector
 function showApiBaseSelector() {
     let selector = document.getElementById('apiBaseSelector');
@@ -416,6 +418,7 @@ async function generateSmartReport() {
         // Get form data
         const formData = new FormData(form);
         const business = {
+            business_name: formData.get('business_name'),
             size: formData.get('size'),
             seats: parseInt(formData.get('seats')) || 0,
             area_sqm: parseInt(formData.get('area_sqm')) || 0,

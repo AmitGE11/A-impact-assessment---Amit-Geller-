@@ -16,8 +16,11 @@ def build_prompt(business: BusinessInput, matched: List[RequirementItem]) -> str
     prompt = f"""אתה מומחה לרישוי עסקים בישראל. אנא צור דוח מפורט בעברית לעסק עם הפרופיל הבא:
 
 **פרופיל העסק:**
+- שם העסק: {business.business_name}
 - גודל: {business.size}
 - מספר מקומות ישיבה: {business.seats}
+- שטח העסק: {business.area_sqm} מ"ר
+- מספר עובדים במשמרת: {business.staff_count}
 - מאפיינים: {', '.join(business.features) if business.features else 'ללא מאפיינים מיוחדים'}
 
 **דרישות רישוי רלוונטיות:**
@@ -111,12 +114,15 @@ def _generate_mock_report(business: BusinessInput, requirements: List[Requiremen
             categories[req.category] = {"High": [], "Medium": [], "Low": []}
         categories[req.category][req.priority].append(req)
     
-    report = f"""# דוח רישוי עסק - Licensure Buddy IL
+    report = f"""# דוח רישוי עסק - {business.business_name}
 
 ## סיכום עסקי
 **פרופיל העסק:**
+- שם העסק: {business.business_name}
 - גודל: {business.size}
 - מספר מקומות ישיבה: {business.seats}
+- שטח העסק: {business.area_sqm} מ"ר
+- מספר עובדים במשמרת: {business.staff_count}
 - מאפיינים: {', '.join(business.features) if business.features else 'ללא מאפיינים מיוחדים'}
 
 ---

@@ -11,6 +11,7 @@ ALLOWED_FEATURES = {
 
 class BusinessInput(BaseModel):
     """Business profile input for matching requirements"""
+    business_name: str = Field(..., description="Business name")
     size: Literal["small", "medium", "large"]
     seats: int = Field(default=0, ge=0, description="Number of seats")
     area_sqm: int = Field(default=0, ge=0, description="Business area in square meters")

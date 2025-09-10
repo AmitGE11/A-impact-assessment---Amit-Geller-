@@ -466,12 +466,14 @@ async function generateSmartReport() {
         
         // Show model badge and action buttons
         if (reportData.metadata) {
-            const modelName = reportData.metadata.model || 'Mock';
-            modalModelBadge.textContent = `מודל בשימוש: ${modelName}`;
+            const provider = reportData.metadata.provider || 'mock';
+            const model = reportData.metadata.model || '';
+            const modelText = model ? ` (${model})` : '';
+            modalModelBadge.textContent = `מודל: ${provider}${modelText}`;
             modalModelBadge.style.display = 'inline-block';
             
             // Update the button to reflect the actual model used
-            updateSmartReportButton(modelName);
+            updateSmartReportButton(provider);
         }
         
         modalCopyBtn.style.display = 'inline-flex';
@@ -599,24 +601,24 @@ async function checkAIModelStatus() {
         
         if (response.ok) {
             const data = await response.json();
-            const modelName = data.metadata?.model || 'Mock';
-            updateSmartReportButton(modelName);
+            const provider = data.metadata?.provider || 'mock';
+            updateSmartReportButton(provider);
         } else {
-            updateSmartReportButton('Mock');
+            updateSmartReportButton('mock');
         }
     } catch (error) {
         console.warn('Could not check AI model status:', error);
-        updateSmartReportButton('Mock');
+        updateSmartReportButton('mock');
     }
 }
 
-// Update the Smart Report button text based on model
-function updateSmartReportButton(modelName) {
-    if (modelName === 'Mock' || modelName.includes('Mock')) {
+// Update the Smart Report button text based on provider
+function updateSmartReportButton(provider) {
+    if (provider === 'mock') {
         smartReportBtn.textContent = 'דוח חכם - Mock';
         smartReportBtn.style.background = 'linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%)';
     } else {
-        smartReportBtn.textContent = `דוח חכם - ${modelName}`;
+        smartReportBtn.textContent = `דוח חכם - ${provider}`;
         smartReportBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
     }
 }

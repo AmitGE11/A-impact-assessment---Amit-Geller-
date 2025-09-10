@@ -11,8 +11,8 @@ from models import BusinessInput, MatchResponse, ReportRequest, ReportResponse
 from services.matcher import match_requirements
 from services.report import generate_report
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from backend/.env
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -22,6 +22,17 @@ const modelBadge = document.getElementById('modelBadge');
 const copyReportBtn = document.getElementById('copyReportBtn');
 const downloadReportBtn = document.getElementById('downloadReportBtn');
 
+// Smart Report Modal elements
+const smartReportBtn = document.getElementById('smartReportBtn');
+const smartReportModal = document.getElementById('smartReportModal');
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+const modalLoading = document.getElementById('modalLoading');
+const modalReportContent = document.getElementById('modalReportContent');
+const modalModelBadge = document.getElementById('modalModelBadge');
+const modalCopyBtn = document.getElementById('modalCopyBtn');
+const modalDownloadBtn = document.getElementById('modalDownloadBtn');
+
 // Statistics and filter elements
 const statsSection = document.getElementById('statsSection');
 const totalMatchesEl = document.getElementById('totalMatches');
@@ -537,6 +548,151 @@ function downloadReportAsText() {
     }
 }
 
+// Smart Report Modal Functions
+function openSmartReportModal() {
+    smartReportModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    // Generate smart report
+    generateSmartReport();
+}
+
+function closeSmartReportModal() {
+    smartReportModal.style.display = 'none';
+    document.body.style.overflow = 'auto'; // Restore scrolling
+    
+    // Reset modal content
+    modalReportContent.innerHTML = '';
+    modalModelBadge.style.display = 'none';
+    modalCopyBtn.style.display = 'none';
+    modalDownloadBtn.style.display = 'none';
+}
+
+async function generateSmartReport() {
+    try {
+        // Show loading state
+        modalLoading.style.display = 'flex';
+        modalReportContent.innerHTML = '';
+        modalModelBadge.style.display = 'none';
+        modalCopyBtn.style.display = 'none';
+        modalDownloadBtn.style.display = 'none';
+
+        // Get form data
+        const formData = new FormData(form);
+        const business = {
+            size: formData.get('size'),
+            seats: parseInt(formData.get('seats')) || 0,
+            area_sqm: parseInt(formData.get('area_sqm')) || 0,
+            staff_count: parseInt(formData.get('staff_count')) || 0,
+            features: formData.getAll('features')
+        };
+
+        // First get matches
+        const matchResponse = await fetch(`${getApiBase()}/api/match`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(business)
+        });
+
+        if (!matchResponse.ok) {
+            throw new Error(`HTTP error! status: ${matchResponse.status}`);
+        }
+
+        const matchData = await matchResponse.json();
+        
+        // Generate report
+        const reportRequest = {
+            business: business,
+            requirements: matchData.matched
+        };
+
+        const reportResponse = await fetch(`${getApiBase()}/api/report`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(reportRequest)
+        });
+
+        if (!reportResponse.ok) {
+            throw new Error(`HTTP error! status: ${reportResponse.status}`);
+        }
+
+        const reportData = await reportResponse.json();
+        
+        // Display the report with proper formatting
+        modalReportContent.innerHTML = formatReportContent(reportData.report);
+        
+        // Show model badge and action buttons
+        if (reportData.metadata) {
+            modalModelBadge.textContent = `מודל בשימוש: ${reportData.metadata.model || 'Mock'}`;
+            modalModelBadge.style.display = 'inline-block';
+        }
+        
+        modalCopyBtn.style.display = 'inline-flex';
+        modalDownloadBtn.style.display = 'inline-flex';
+
+    } catch (error) {
+        console.error('Error generating smart report:', error);
+        modalReportContent.innerHTML = '<div class="error">שגיאה ביצירת הדוח החכם: ' + error.message + '</div>';
+    } finally {
+        modalLoading.style.display = 'none';
+    }
+}
+
+// Copy modal report to clipboard
+async function copyModalReportToClipboard() {
+    try {
+        const reportText = modalReportContent.textContent || modalReportContent.innerText;
+        await navigator.clipboard.writeText(reportText);
+        
+        // Show success feedback
+        const originalText = modalCopyBtn.textContent;
+        modalCopyBtn.textContent = '✅ הועתק!';
+        modalCopyBtn.style.background = '#28a745';
+        
+        setTimeout(() => {
+            modalCopyBtn.textContent = originalText;
+            modalCopyBtn.style.background = '#28a745';
+        }, 2000);
+    } catch (error) {
+        console.error('Failed to copy report:', error);
+        alert('שגיאה בהעתקת הדוח. אנא נסה שוב.');
+    }
+}
+
+// Download modal report as text file
+function downloadModalReportAsText() {
+    try {
+        const reportText = modalReportContent.textContent || modalReportContent.innerText;
+        const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `דוח_חכם_רישוי_עסק_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        // Show success feedback
+        const originalText = modalDownloadBtn.textContent;
+        modalDownloadBtn.textContent = '✅ הורד!';
+        modalDownloadBtn.style.background = '#17a2b8';
+        
+        setTimeout(() => {
+            modalDownloadBtn.textContent = originalText;
+            modalDownloadBtn.style.background = '#17a2b8';
+        }, 2000);
+    } catch (error) {
+        console.error('Failed to download report:', error);
+        alert('שגיאה בהורדת הדוח. אנא נסה שוב.');
+    }
+}
+
 // Make setApiBase globally accessible
 window.setApiBase = setApiBase;
 
@@ -549,6 +705,20 @@ clearFiltersBtn.addEventListener('click', clearFilters);
 // Add event listeners for report actions
 copyReportBtn.addEventListener('click', copyReportToClipboard);
 downloadReportBtn.addEventListener('click', downloadReportAsText);
+
+// Add event listeners for smart report modal
+smartReportBtn.addEventListener('click', openSmartReportModal);
+modalCloseBtn.addEventListener('click', closeSmartReportModal);
+modalBackdrop.addEventListener('click', closeSmartReportModal);
+modalCopyBtn.addEventListener('click', copyModalReportToClipboard);
+modalDownloadBtn.addEventListener('click', downloadModalReportAsText);
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape' && smartReportModal.style.display === 'flex') {
+        closeSmartReportModal();
+    }
+});
 
 // Check backend health on page load
 document.addEventListener('DOMContentLoaded', checkHealth);

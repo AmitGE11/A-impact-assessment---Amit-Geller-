@@ -164,7 +164,10 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="submitBtn">קבל דוח</button>
+                    <div class="form-actions">
+                        <button type="submit" id="submitBtn">קבל דוח</button>
+                        <button type="button" id="smartReportBtn" class="smart-report-btn">דוח חכם</button>
+                    </div>
                 </form>
             </section>
 
@@ -252,6 +255,37 @@
         <footer>
             <p>© 2024 Licensure Buddy IL - מערכת סיוע לרישוי עסקים</p>
         </footer>
+    </div>
+
+    <!-- Smart Report Side Window Modal -->
+    <div id="smartReportModal" class="smart-report-modal" style="display: none;">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>דוח חכם - AI Report</h2>
+                <button type="button" class="modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-loading" id="modalLoading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>יוצר דוח חכם...</p>
+                </div>
+                <div class="modal-report-content" id="modalReportContent">
+                    <!-- Report content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-actions">
+                    <span class="modal-model-badge" id="modalModelBadge" style="display: none;"></span>
+                    <button type="button" id="modalCopyBtn" class="modal-action-btn copy-btn" style="display: none;">
+                        📋 העתקה
+                    </button>
+                    <button type="button" id="modalDownloadBtn" class="modal-action-btn download-btn" style="display: none;">
+                        💾 הורדה (.txt)
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

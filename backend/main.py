@@ -14,6 +14,7 @@ if not (os.getenv("PROVIDER") or "").strip():
 import logging
 from typing import List
 from fastapi import FastAPI, HTTPException
+from pydantic import ValidationError
 from fastapi.middleware.cors import CORSMiddleware
 import json
 
@@ -100,12 +101,39 @@ async def match_business_requirements(business: BusinessInput):
 
 @app.post("/api/report", response_model=ReportResponse)
 def report(req: ReportRequest):
+    # Lightweight observability for debugging
     try:
-        data = generate_report(req.business, req.matches)
-        return ReportResponse(**data)
+        biz_name = getattr(getattr(req, "business", None), "business_name", None)
     except Exception:
+        biz_name = None
+    req_len = -1
+    try:
+        # Prefer 'requirements' (per schema); fall back to 'matches' for backward-compat
+        req_items = getattr(req, "requirements", None)
+        if req_items is None:
+            req_items = getattr(req, "matches", None)
+        req_len = len(req_items) if req_items is not None else -1
+    except Exception:
+        pass
+    logging.getLogger("main").info("ReportRequest: business=%s, requirements_len=%s", biz_name, req_len)
+
+    try:
+        # Pass the canonical list to the service
+        requirements = getattr(req, "requirements", None)
+        if requirements is None:
+            requirements = getattr(req, "matches", None)  # temporary compatibility
+        data = generate_report(req.business, requirements)
+        return ReportResponse(**data)
+    except HTTPException:
+        # Preserve existing HTTPExceptions as-is
+        raise
+    except ValidationError as ve:
+        logging.getLogger("main").exception("Report validation failed")
+        raise HTTPException(status_code=422, detail=str(ve))
+    except Exception as e:
         logging.getLogger("main").exception("Report generation failed")
-        raise HTTPException(status_code=500, detail="AI report generation failed")
+        # TEMP: surface the real error to the client for faster debugging
+        raise HTTPException(status_code=400, detail=f"Report generation failed: {e}")
 
 if __name__ == "__main__":
     import uvicorn

@@ -17,7 +17,43 @@ def _mock_report(business: Dict[str, Any], matches: Dict[str, Any]) -> str:
     )
 
 
-def _gemini_report(business: Dict[str, Any], matches: Dict[str, Any]) -> Dict[str, Any]:
+def _gemini_report(business, requirements):
+    """
+    Accept a list of requirement items and build a stable payload for Gemini.
+    """
+    items = requirements or []
+    # Normalize business whether it's a model or dict
+    def _get(obj, name):
+        return getattr(obj, name, None) if hasattr(obj, name) else (obj.get(name) if isinstance(obj, dict) else None)
+    payload = {
+        "business": {
+            "business_name": _get(business, "business_name"),
+            "size": _get(business, "size"),
+            "seats": _get(business, "seats"),
+            "area_sqm": _get(business, "area_sqm"),
+            "staff_count": _get(business, "staff_count"),
+            "features": _get(business, "features"),
+        },
+        "matches_total": len(items),
+        "items": [
+            {
+                "id": str(_get(it, "id")),
+                "title": _get(it, "title"),
+                "category": _get(it, "category"),
+                "priority": _get(it, "priority"),
+                "description": _get(it, "description"),
+                "conditions": _get(it, "conditions") or {},
+            }
+            for it in items
+        ],
+    }
+
+    # Build the prompt and call Gemini here (existing logic), but use `payload`
+    # instead of assuming dict shape for matches.
+    return _call_gemini_with_payload(payload)
+
+
+def _call_gemini_with_payload(payload):
     """Generate a concise Hebrew report using Google Gemini."""
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -39,14 +75,14 @@ def _gemini_report(business: Dict[str, Any], matches: Dict[str, Any]) -> Dict[st
     )
 
     user_payload = {
-        "business": business,
+        "business": payload["business"],
         "summary": {
-            "matches_total": matches.get("matches_total"),
-            "high_risk": len([m for m in matches.get("items", []) if m.get("severity") == "high"]),
-            "medium_risk": len([m for m in matches.get("items", []) if m.get("severity") == "medium"]),
+            "matches_total": payload["matches_total"],
+            "high_risk": len([m for m in payload["items"] if m.get("priority") == "High"]),
+            "medium_risk": len([m for m in payload["items"] if m.get("priority") == "Medium"]),
         },
         # cap requirements to keep prompt short
-        "requirements": matches.get("items", [])[:50],
+        "requirements": payload["items"][:50],
     }
 
     try:
@@ -80,16 +116,35 @@ def _openai_report(business: Dict[str, Any], matches: Dict[str, Any]) -> Dict[st
     }
 
 
-def generate_report(business: dict, matches: dict) -> dict:
+def generate_report(business, requirements):
+    """
+    `requirements` is a List[RequirementItem]-like sequence (id, title, category, priority, description, conditions?).
+    """
     provider = (os.getenv("PROVIDER") or "mock").strip().lower()
     log.info("AI provider configured: %s", provider)
 
     if provider == "gemini":
-        return _gemini_report(business, matches)
+        return _gemini_report(business, requirements)
     elif provider == "openai":
-        return _openai_report(business, matches)
+        return _openai_report(business, requirements)
     else:
+        # For mock mode, convert requirements to the old format
+        items = requirements or []
+        matches_dict = {
+            "matches_total": len(items),
+            "items": [
+                {
+                    "id": str(getattr(it, "id", None) or it.get("id")),
+                    "title": getattr(it, "title", None) or it.get("title"),
+                    "category": getattr(it, "category", None) or it.get("category"),
+                    "priority": getattr(it, "priority", None) or it.get("priority"),
+                    "description": getattr(it, "description", None) or it.get("description"),
+                    "conditions": getattr(it, "conditions", None) or it.get("conditions", {}),
+                }
+                for it in items
+            ]
+        }
         return {
-            "report": _mock_report(business, matches),
+            "report": _mock_report(business, matches_dict),
             "metadata": {"mode": "mock", "provider": "mock"},
         }

@@ -1,5 +1,5 @@
 from typing import List, Literal, Optional, Dict, Any
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, ConfigDict
 
 # Allowed business features
 ALLOWED_FEATURES = {
@@ -51,8 +51,9 @@ class MatchResponse(BaseModel):
 
 class ReportRequest(BaseModel):
     """Request for generating compliance report"""
+    model_config = ConfigDict(populate_by_name=True)
     business: BusinessInput
-    requirements: List[RequirementItem]
+    matches: List[RequirementItem] = Field(..., alias="requirements")
 
 class ReportResponse(BaseModel):
     """Response containing generated report"""

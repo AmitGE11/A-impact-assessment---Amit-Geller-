@@ -1,6 +1,3 @@
-Here’s your **rewritten README.md**, fully aligned with the assignment instructions and updated to **Gemini** (no more OpenAI references).
-
----
 
 # Licensure Buddy IL
 
@@ -130,7 +127,7 @@ with clear priorities and recommendations.
 In `backend/.env`:
 
 ```env
-GEMINI_API_KEY=your-key-here
+GEMINI_API_KEY=AIzaSyCe6--2MV2s9YCVvSeCSKzBG69dEd6G34o
 GEMINI_MODEL=gemini-1.5-flash
 ```
 
@@ -138,13 +135,10 @@ GEMINI_MODEL=gemini-1.5-flash
 
 ## Screenshots
 
-(Attach 2–3 screenshots of questionnaire, results, and AI report.)
+<img width="1052" height="654" alt="Screenshot 2025-09-12 074553" src="https://github.com/user-attachments/assets/86a6983d-8361-4c06-b5b4-8e0adc4a2acc" />
+<img width="1078" height="857" alt="Screenshot 2025-09-12 074612" src="https://github.com/user-attachments/assets/b3e814c1-d508-4b4b-b5df-c29e89ed56f6" />
+<img width="843" height="878" alt="Screenshot 2025-09-12 074638" src="https://github.com/user-attachments/assets/518df2e6-6d71-4438-a718-074f68449cff" />
 
 ---
 
-✨ Keep the README clean and focused for the assignment.
-For extra details (parsing methods, dev scripts, future improvements), create a `DEVELOPMENT_NOTES.md`.
-
----
-
-Do you also want me to **rewrite the `.env.example` file** to match Gemini (instead of OpenAI)?
+This Project of The A-Impact Appliction Process 
